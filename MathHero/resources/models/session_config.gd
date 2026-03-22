@@ -6,6 +6,7 @@ extends Resource
 
 # Podstawowe
 var operation_type: String = "addition"
+var question_format: String = "horizontal"  # "horizontal" lub "vertical"
 var question_count: int = 10
 var min_value: int = 1
 var max_value: int = 100
@@ -53,6 +54,48 @@ func calculate_score(correct: bool, response_time: float,
 	return max(0, points)
 
 
-## Zwraca domyślną konfigurację (hardcoded Epic 2).
+## Zwraca domyślną konfigurację.
 static func create_default() -> SessionConfig:
 	return SessionConfig.new()
+
+
+## Serializuje konfigurację do słownika (zapis w localStorage).
+func to_dict() -> Dictionary:
+	return {
+		"operation_type": operation_type,
+		"question_format": question_format,
+		"question_count": question_count,
+		"min_value": min_value,
+		"max_value": max_value,
+		"time_limit_enabled": time_limit_enabled,
+		"time_limit_seconds": time_limit_seconds,
+		"answer_mode": answer_mode,
+		"on_error_mode": on_error_mode,
+		"retry_count": retry_count,
+		"scoring_base_points": scoring_base_points,
+		"scoring_time_bonus": scoring_time_bonus,
+		"scoring_streak_multiplier": scoring_streak_multiplier,
+		"scoring_error_penalty": scoring_error_penalty,
+		"base_points_value": base_points_value,
+	}
+
+
+## Odtwarza konfigurację ze słownika.
+static func from_dict(d: Dictionary) -> SessionConfig:
+	var c := SessionConfig.new()
+	c.operation_type = d.get("operation_type", "addition")
+	c.question_format = d.get("question_format", "horizontal")
+	c.question_count = d.get("question_count", 10)
+	c.min_value = d.get("min_value", 1)
+	c.max_value = d.get("max_value", 100)
+	c.time_limit_enabled = d.get("time_limit_enabled", false)
+	c.time_limit_seconds = d.get("time_limit_seconds", 30.0)
+	c.answer_mode = d.get("answer_mode", "keyboard")
+	c.on_error_mode = d.get("on_error_mode", "show_answer")
+	c.retry_count = d.get("retry_count", 0)
+	c.scoring_base_points = d.get("scoring_base_points", true)
+	c.scoring_time_bonus = d.get("scoring_time_bonus", false)
+	c.scoring_streak_multiplier = d.get("scoring_streak_multiplier", false)
+	c.scoring_error_penalty = d.get("scoring_error_penalty", false)
+	c.base_points_value = d.get("base_points_value", 10)
+	return c

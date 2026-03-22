@@ -22,4 +22,4 @@ func _on_tap() -> void:
 	AudioManager.unlock_audio()
 
 	# Epic 2: zawsze idź do menu głównego (profile dopiero w Epic 3)
-	SceneManager.go_to(Constants.SCENE_MAIN_MENU)
+	SceneManager.go_to(Constants.SCENE_PROFILE_SELECT)

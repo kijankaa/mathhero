@@ -7,11 +7,20 @@ extends Control
 @onready var _answer_label: Label = $AnswerLabel
 
 var _current_answer: String = ""
+var _format: String = "horizontal"
+
+
+## Ustawia format wyświetlania pytania ("horizontal" lub "vertical").
+func set_format(format: String) -> void:
+	_format = format
 
 
 ## Wyświetla nowe pytanie i czyści pole odpowiedzi.
 func show_question(question: Question) -> void:
-	_question_label.text = question.display_text
+	if _format == "vertical":
+		_question_label.text = "  %d\n+ %d\n───" % [question.operand_a, question.operand_b]
+	else:
+		_question_label.text = question.display_text
 	_current_answer = ""
 	_answer_label.text = "_"
 	_answer_label.modulate = Color.WHITE

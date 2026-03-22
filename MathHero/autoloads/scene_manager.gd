@@ -11,6 +11,7 @@ const SCENES: Dictionary = {
 	Constants.SCENE_SUMMARY:         "res://scenes/ui/summary.tscn",
 	Constants.SCENE_CONFIG:          "res://scenes/ui/config.tscn",
 	Constants.SCENE_PROFILE_SELECT:  "res://scenes/ui/profile_select.tscn",
+	Constants.SCENE_PROFILE_CREATE:  "res://scenes/ui/profile_create.tscn",
 	Constants.SCENE_STATS:           "res://scenes/ui/stats.tscn",
 	Constants.SCENE_REWARDS:         "res://scenes/ui/rewards.tscn",
 	Constants.SCENE_GALAXY:          "res://scenes/ui/galaxy.tscn",

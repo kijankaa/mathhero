@@ -5,8 +5,7 @@
 extends Node
 
 # Aktywny profil (ustawiany na ekranie wyboru profilu)
-var current_profile_id: String = ""
-var current_profile_name: String = ""
+var current_profile: PlayerProfile = null
 
 # Konfiguracja sesji (ustawiana na ekranie konfiguracji) — do Epic 3
 var current_session_config: Resource = null
@@ -24,17 +23,16 @@ func _ready() -> void:
 
 
 ## Ustawia aktywny profil.
-func set_profile(profile_id: String, profile_name: String) -> void:
-	current_profile_id = profile_id
-	current_profile_name = profile_name
-	EventBus.profile_selected.emit(profile_id)
+func set_profile(profile: PlayerProfile) -> void:
+	current_profile = profile
+	EventBus.profile_selected.emit(profile.id)
 	if OS.is_debug_build():
-		print("[GameState] Profil ustawiony: ", profile_name, " (", profile_id, ")")
+		print("[GameState] Profil ustawiony: ", profile.name)
 
 
 ## Czy profil jest wybrany.
 func has_active_profile() -> bool:
-	return current_profile_id != ""
+	return current_profile != null
 
 
 ## Czyści stan sesji po zakończeniu.

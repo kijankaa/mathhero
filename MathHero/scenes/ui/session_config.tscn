@@ -1,0 +1,219 @@
+[gd_scene format=3 uid="uid://c6wq8n3r5hytm"]
+
+[ext_resource type="Script" path="res://scripts/ui/session_config.gd" id="1_sescfg"]
+
+[node name="SessionConfig" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_sescfg")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.039215688, 0.039215688, 0.18039216, 1)
+
+[node name="ProfileLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 20.0
+offset_top = 15.0
+offset_right = 300.0
+offset_bottom = 45.0
+text = ""
+
+[node name="PresetsContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 50.0
+offset_bottom = 100.0
+grow_horizontal = 2
+
+[node name="ConfigPanel" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.0
+anchor_right = 0.5
+anchor_bottom = 0.0
+offset_left = -320.0
+offset_top = 110.0
+offset_right = 320.0
+offset_bottom = 600.0
+grow_horizontal = 2
+
+[node name="QuestionCountRow" type="HBoxContainer" parent="ConfigPanel"]
+layout_mode = 2
+
+[node name="QuestionCountLabel" type="Label" parent="ConfigPanel/QuestionCountRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+text = "Liczba pytań:"
+
+[node name="QuestionCountInput" type="SpinBox" parent="ConfigPanel/QuestionCountRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+min_value = 5.0
+max_value = 50.0
+step = 5.0
+value = 10.0
+
+[node name="RangeRow" type="HBoxContainer" parent="ConfigPanel"]
+layout_mode = 2
+
+[node name="RangeLabel" type="Label" parent="ConfigPanel/RangeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+text = "Zakres liczb:"
+
+[node name="MinValueInput" type="SpinBox" parent="ConfigPanel/RangeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(100, 0)
+min_value = 1.0
+max_value = 199.0
+value = 1.0
+
+[node name="RangeSeparator" type="Label" parent="ConfigPanel/RangeRow"]
+layout_mode = 2
+text = " – "
+
+[node name="MaxValueInput" type="SpinBox" parent="ConfigPanel/RangeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(100, 0)
+min_value = 2.0
+max_value = 200.0
+value = 100.0
+
+[node name="TimeLimitRow" type="HBoxContainer" parent="ConfigPanel"]
+layout_mode = 2
+
+[node name="TimeLimitLabel" type="Label" parent="ConfigPanel/TimeLimitRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+text = "Limit czasu:"
+
+[node name="TimeLimitToggle" type="CheckButton" parent="ConfigPanel/TimeLimitRow"]
+layout_mode = 2
+text = ""
+
+[node name="TimeLimitInput" type="SpinBox" parent="ConfigPanel/TimeLimitRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(100, 0)
+min_value = 5.0
+max_value = 120.0
+step = 5.0
+value = 30.0
+editable = false
+suffix = "s"
+
+[node name="AnswerModeRow" type="HBoxContainer" parent="ConfigPanel"]
+layout_mode = 2
+
+[node name="AnswerModeLabel" type="Label" parent="ConfigPanel/AnswerModeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+text = "Tryb odpowiedzi:"
+
+[node name="AnswerModeButton" type="OptionButton" parent="ConfigPanel/AnswerModeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+
+[node name="OnErrorRow" type="HBoxContainer" parent="ConfigPanel"]
+layout_mode = 2
+
+[node name="OnErrorLabel" type="Label" parent="ConfigPanel/OnErrorRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+text = "Przy błędzie:"
+
+[node name="OnErrorButton" type="OptionButton" parent="ConfigPanel/OnErrorRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+
+[node name="FormatRow" type="HBoxContainer" parent="ConfigPanel"]
+layout_mode = 2
+
+[node name="FormatLabel" type="Label" parent="ConfigPanel/FormatRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+text = "Format pytania:"
+
+[node name="FormatButton" type="OptionButton" parent="ConfigPanel/FormatRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+
+[node name="ScoringRow" type="HBoxContainer" parent="ConfigPanel"]
+layout_mode = 2
+
+[node name="ScoringLabel" type="Label" parent="ConfigPanel/ScoringRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+text = "Punktacja:"
+
+[node name="ScoringBase" type="CheckBox" parent="ConfigPanel/ScoringRow"]
+layout_mode = 2
+button_pressed = true
+text = "Bazowe"
+
+[node name="ScoringTime" type="CheckBox" parent="ConfigPanel/ScoringRow"]
+layout_mode = 2
+text = "Czas"
+
+[node name="ScoringStreak" type="CheckBox" parent="ConfigPanel/ScoringRow"]
+layout_mode = 2
+text = "Seria"
+
+[node name="ErrorLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -130.0
+offset_right = 300.0
+offset_bottom = -100.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+modulate = Color(1, 0.3, 0.3, 1)
+text = ""
+
+[node name="SavePresetButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -85.0
+offset_right = -10.0
+offset_bottom = -45.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "Zapisz preset"
+
+[node name="PlayButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -85.0
+offset_right = 300.0
+offset_bottom = -45.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "GRAJ"

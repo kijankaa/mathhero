@@ -27,9 +27,23 @@ const SCENE_SESSION: String = "session"
 const SCENE_SUMMARY: String = "summary"
 const SCENE_CONFIG: String = "config"
 const SCENE_PROFILE_SELECT: String = "profile_select"
+const SCENE_PROFILE_CREATE: String = "profile_create"
 const SCENE_STATS: String = "stats"
 const SCENE_REWARDS: String = "rewards"
 const SCENE_GALAXY: String = "galaxy"
+
+# Avatary profilu
+const AVATARS: Array[String] = ["🚀", "🌟", "👾", "🤖", "🦊", "🐉", "🎯", "⚡"]
+
+# Walidacja konfiguracji sesji
+const CONFIG_MIN_VALUE_MIN: int = 1
+const CONFIG_MIN_VALUE_MAX: int = 199
+const CONFIG_MAX_VALUE_MIN: int = 2
+const CONFIG_MAX_VALUE_MAX: int = 200
+const CONFIG_QUESTION_COUNT_MIN: int = 5
+const CONFIG_QUESTION_COUNT_MAX: int = 50
+const CONFIG_TIME_LIMIT_MIN: float = 5.0
+const CONFIG_TIME_LIMIT_MAX: float = 120.0
 
 # Punkty i nagrody
 const STARS_PER_PERFECT: int = 3

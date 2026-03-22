@@ -5,12 +5,14 @@ extends Control
 @onready var _score_label: Label = $ScoreLabel
 @onready var _accuracy_label: Label = $AccuracyLabel
 @onready var _play_again_button: Button = $PlayAgainButton
+@onready var _config_button: Button = $ConfigButton
 
 var _result: SessionResult = null
 
 
 func _ready() -> void:
 	_play_again_button.pressed.connect(_on_play_again_pressed)
+	_config_button.pressed.connect(_on_config_pressed)
 
 	# Odczytaj wynik zapisany w GameState (sygnał mógł przyjść przed załadowaniem sceny)
 	if GameState.last_session_result != null:
@@ -36,3 +38,7 @@ func _update_ui() -> void:
 
 func _on_play_again_pressed() -> void:
 	SceneManager.go_to(Constants.SCENE_SESSION)
+
+
+func _on_config_pressed() -> void:
+	SceneManager.go_to(Constants.SCENE_CONFIG)

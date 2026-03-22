@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://bv5k2r7n4xqtd"]
+
+[ext_resource type="Script" path="res://scripts/components/multiple_choice.gd" id="1_mulcho"]
+
+[node name="MultipleChoice" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 420.0
+offset_bottom = 200.0
+script = ExtResource("1_mulcho")
+
+[node name="GridContainer" type="GridContainer" parent="."]
+layout_mode = 0
+offset_right = 420.0
+offset_bottom = 200.0
+columns = 2
+
+[node name="Choice0" type="Button" parent="GridContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 80)
+text = "?"
+
+[node name="Choice1" type="Button" parent="GridContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 80)
+text = "?"
+
+[node name="Choice2" type="Button" parent="GridContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 80)
+text = "?"
+
+[node name="Choice3" type="Button" parent="GridContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 80)
+text = "?"
