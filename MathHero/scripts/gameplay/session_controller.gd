@@ -32,9 +32,13 @@ func _start_session() -> void:
 	if config == null:
 		config = SessionConfig.create_default()
 
-	var operation: MathOperation = AdditionOperation.new()
+	var is_mixed: bool = not config.mixed_operations.is_empty()
 	var questions: Array[Question] = []
 	for i in config.question_count:
+		var op_type: String = config.operation_type
+		if is_mixed:
+			op_type = config.mixed_operations[randi() % config.mixed_operations.size()]
+		var operation: MathOperation = _resolve_operation(op_type)
 		questions.append(operation.generate_question(config))
 
 	_state = SessionState.create(config, questions)
@@ -126,6 +130,16 @@ func _process_answer(answer: int) -> void:
 
 	await get_tree().create_timer(1.5).timeout
 	_show_next_question()
+
+
+## Zwraca instancję MathOperation dla podanego typu.
+func _resolve_operation(op_type: String) -> MathOperation:
+	match op_type:
+		Constants.OP_SUBTRACTION:        return SubtractionOperation.new()
+		Constants.OP_MULTIPLICATION:     return MultiplicationOperation.new()
+		Constants.OP_DIVISION:           return DivisionOperation.new()
+		Constants.OP_ORDER_OF_OPERATIONS:return OrderOfOperationsOperation.new()
+		_:                               return AdditionOperation.new()
 
 
 func _update_ui() -> void:

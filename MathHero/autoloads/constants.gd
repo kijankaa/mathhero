@@ -32,6 +32,23 @@ const SCENE_STATS: String = "stats"
 const SCENE_REWARDS: String = "rewards"
 const SCENE_GALAXY: String = "galaxy"
 
+# Typy operacji matematycznych
+const OP_ADDITION: String = "addition"
+const OP_SUBTRACTION: String = "subtraction"
+const OP_MULTIPLICATION: String = "multiplication"
+const OP_DIVISION: String = "division"
+const OP_ORDER_OF_OPERATIONS: String = "order_of_operations"
+
+# Domyślne zakresy per operacja
+const OP_DEFAULT_RANGES: Dictionary = {
+	"addition":            {"min": 1, "max": 100},
+	"subtraction":         {"min": 1, "max": 100},
+	"multiplication":      {"min": 1, "max": 12},
+	"division":            {"min": 1, "max": 12},
+	"order_of_operations": {"min": 1, "max": 20},
+	"mixed":               {"min": 1, "max": 20},
+}
+
 # Avatary profilu
 const AVATARS: Array[String] = ["🚀", "🌟", "👾", "🤖", "🦊", "🐉", "🎯", "⚡"]
 

@@ -11,6 +11,11 @@ const SYSTEM_PRESETS: Array[Dictionary] = [
 	{"name": "Na czas",     "config": {"operation_type": "addition", "question_format": "horizontal", "question_count": 15, "min_value": 1,  "max_value": 100, "time_limit_enabled": true,  "time_limit_seconds": 10.0, "answer_mode": "keyboard",          "on_error_mode": "show_answer", "retry_count": 0, "scoring_base_points": true,  "scoring_time_bonus": true,  "scoring_streak_multiplier": true,  "scoring_error_penalty": false, "base_points_value": 10}},
 ]
 
+const _OP_INDEX_MAP: Array[String] = [
+	"addition", "subtraction", "multiplication", "division",
+	"order_of_operations", "mixed"
+]
+
 @onready var _profile_label: Label = $ProfileLabel
 @onready var _presets_container: HBoxContainer = $PresetsContainer
 @onready var _question_count_input: SpinBox = $ConfigPanel/QuestionCountRow/QuestionCountInput
@@ -21,6 +26,15 @@ const SYSTEM_PRESETS: Array[Dictionary] = [
 @onready var _answer_mode_button: OptionButton = $ConfigPanel/AnswerModeRow/AnswerModeButton
 @onready var _on_error_button: OptionButton = $ConfigPanel/OnErrorRow/OnErrorButton
 @onready var _format_button: OptionButton = $ConfigPanel/FormatRow/FormatButton
+@onready var _operation_button: OptionButton = $ConfigPanel/OperationRow/OperationButton
+@onready var _mixed_container: VBoxContainer = $ConfigPanel/MixedContainer
+@onready var _mixed_addition: CheckBox = $ConfigPanel/MixedContainer/MixedAddition
+@onready var _mixed_subtraction: CheckBox = $ConfigPanel/MixedContainer/MixedSubtraction
+@onready var _mixed_multiplication: CheckBox = $ConfigPanel/MixedContainer/MixedMultiplication
+@onready var _mixed_division: CheckBox = $ConfigPanel/MixedContainer/MixedDivision
+@onready var _mixed_order: CheckBox = $ConfigPanel/MixedContainer/MixedOrder
+@onready var _parentheses_row: HBoxContainer = $ConfigPanel/ParenthesesRow
+@onready var _parentheses_button: OptionButton = $ConfigPanel/ParenthesesRow/ParenthesesButton
 @onready var _scoring_base: CheckBox = $ConfigPanel/ScoringRow/ScoringBase
 @onready var _scoring_time: CheckBox = $ConfigPanel/ScoringRow/ScoringTime
 @onready var _scoring_streak: CheckBox = $ConfigPanel/ScoringRow/ScoringStreak
@@ -33,6 +47,21 @@ func _ready() -> void:
 	_play_button.pressed.connect(_on_play_pressed)
 	_save_preset_button.pressed.connect(_on_save_preset_pressed)
 	_time_limit_toggle.toggled.connect(_on_time_limit_toggled)
+
+	_operation_button.add_item("Dodawanie")
+	_operation_button.add_item("Odejmowanie")
+	_operation_button.add_item("Mnożenie")
+	_operation_button.add_item("Dzielenie")
+	_operation_button.add_item("Kolejność działań")
+	_operation_button.add_item("Mieszane")
+	_operation_button.item_selected.connect(_on_operation_changed)
+
+	_parentheses_button.add_item("Bez nawiasów")
+	_parentheses_button.add_item("Z nawiasami")
+	_parentheses_button.add_item("Mieszane")
+
+	_mixed_container.visible = false
+	_parentheses_row.visible = false
 
 	_answer_mode_button.add_item("Klawiatura")
 	_answer_mode_button.add_item("4 odpowiedzi")
@@ -88,7 +117,40 @@ func _on_preset_selected(config_dict: Dictionary) -> void:
 	_apply_config_to_ui(SessionConfig.from_dict(config_dict))
 
 
+func _on_operation_changed(index: int) -> void:
+	var op: String = _OP_INDEX_MAP[index]
+	var is_mixed: bool = op == "mixed"
+	var is_order: bool = op == "order_of_operations"
+	_mixed_container.visible = is_mixed
+	_parentheses_row.visible = is_order or (is_mixed and _mixed_order.button_pressed)
+	var range_def: Dictionary = Constants.OP_DEFAULT_RANGES.get(op, {"min": 1, "max": 100})
+	_min_value_input.value = range_def["min"]
+	_max_value_input.value = range_def["max"]
+
+
 func _apply_config_to_ui(config: SessionConfig) -> void:
+	var is_mixed: bool = not config.mixed_operations.is_empty()
+	if is_mixed:
+		_operation_button.selected = _OP_INDEX_MAP.find("mixed")
+		_mixed_container.visible = true
+		_mixed_addition.button_pressed = "addition" in config.mixed_operations
+		_mixed_subtraction.button_pressed = "subtraction" in config.mixed_operations
+		_mixed_multiplication.button_pressed = "multiplication" in config.mixed_operations
+		_mixed_division.button_pressed = "division" in config.mixed_operations
+		_mixed_order.button_pressed = "order_of_operations" in config.mixed_operations
+	else:
+		var idx: int = _OP_INDEX_MAP.find(config.operation_type)
+		_operation_button.selected = idx if idx >= 0 else 0
+		_mixed_container.visible = false
+
+	var show_paren: bool = config.operation_type == "order_of_operations" or \
+		(is_mixed and "order_of_operations" in config.mixed_operations)
+	_parentheses_row.visible = show_paren
+	match config.order_of_ops_parentheses:
+		"always": _parentheses_button.selected = 1
+		"mixed":  _parentheses_button.selected = 2
+		_:        _parentheses_button.selected = 0
+
 	_question_count_input.value = config.question_count
 	_min_value_input.value = config.min_value
 	_max_value_input.value = config.max_value
@@ -105,7 +167,23 @@ func _apply_config_to_ui(config: SessionConfig) -> void:
 
 func _read_config_from_ui() -> SessionConfig:
 	var c := SessionConfig.new()
-	c.operation_type = "addition"
+	var op_index: int = _operation_button.selected
+	var op: String = _OP_INDEX_MAP[op_index]
+	if op == "mixed":
+		c.operation_type = "mixed"
+		c.mixed_operations = []
+		if _mixed_addition.button_pressed:      c.mixed_operations.append("addition")
+		if _mixed_subtraction.button_pressed:   c.mixed_operations.append("subtraction")
+		if _mixed_multiplication.button_pressed:c.mixed_operations.append("multiplication")
+		if _mixed_division.button_pressed:      c.mixed_operations.append("division")
+		if _mixed_order.button_pressed:         c.mixed_operations.append("order_of_operations")
+	else:
+		c.operation_type = op
+		c.mixed_operations = []
+	match _parentheses_button.selected:
+		1: c.order_of_ops_parentheses = "always"
+		2: c.order_of_ops_parentheses = "mixed"
+		_: c.order_of_ops_parentheses = "none"
 	c.question_count = int(_question_count_input.value)
 	c.min_value = int(_min_value_input.value)
 	c.max_value = int(_max_value_input.value)
@@ -121,6 +199,8 @@ func _read_config_from_ui() -> SessionConfig:
 
 
 func _validate_config(c: SessionConfig) -> String:
+	if c.operation_type == "mixed" and c.mixed_operations.is_empty():
+		return "Wybierz co najmniej jedną operację w trybie mieszanym"
 	if c.min_value >= c.max_value:
 		return "Min musi być mniejsze niż Max"
 	if c.min_value < Constants.CONFIG_MIN_VALUE_MIN:

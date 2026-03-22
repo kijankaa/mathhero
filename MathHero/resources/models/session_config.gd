@@ -7,6 +7,8 @@ extends Resource
 # Podstawowe
 var operation_type: String = "addition"
 var question_format: String = "horizontal"  # "horizontal" lub "vertical"
+var mixed_operations: Array[String] = []    # niepuste = tryb mieszany
+var order_of_ops_parentheses: String = "none"  # "none", "always", "mixed"
 var question_count: int = 10
 var min_value: int = 1
 var max_value: int = 100
@@ -77,6 +79,8 @@ func to_dict() -> Dictionary:
 		"scoring_streak_multiplier": scoring_streak_multiplier,
 		"scoring_error_penalty": scoring_error_penalty,
 		"base_points_value": base_points_value,
+		"mixed_operations": mixed_operations,
+		"order_of_ops_parentheses": order_of_ops_parentheses,
 	}
 
 
@@ -98,4 +102,6 @@ static func from_dict(d: Dictionary) -> SessionConfig:
 	c.scoring_streak_multiplier = d.get("scoring_streak_multiplier", false)
 	c.scoring_error_penalty = d.get("scoring_error_penalty", false)
 	c.base_points_value = d.get("base_points_value", 10)
+	c.mixed_operations = d.get("mixed_operations", [])
+	c.order_of_ops_parentheses = d.get("order_of_ops_parentheses", "none")
 	return c

@@ -17,8 +17,10 @@ func set_format(format: String) -> void:
 
 ## Wyświetla nowe pytanie i czyści pole odpowiedzi.
 func show_question(question: Question) -> void:
-	if _format == "vertical":
-		_question_label.text = "  %d\n+ %d\n───" % [question.operand_a, question.operand_b]
+	var two_arg_ops: Array[String] = ["addition", "subtraction", "multiplication", "division"]
+	if _format == "vertical" and question.operation in two_arg_ops:
+		var sym: String = _get_op_symbol(question.operation)
+		_question_label.text = "  %d\n%s %d\n───" % [question.operand_a, sym, question.operand_b]
 	else:
 		_question_label.text = question.display_text
 	_current_answer = ""
@@ -55,6 +57,14 @@ func show_feedback(correct: bool, correct_answer: int = 0) -> void:
 	else:
 		_answer_label.modulate = Color.RED
 		_question_label.text += "   ✓ %d" % correct_answer
+
+
+func _get_op_symbol(operation: String) -> String:
+	match operation:
+		"subtraction":    return "-"
+		"multiplication": return "×"
+		"division":       return "÷"
+		_:                return "+"
 
 
 ## Czyści feedback i pole odpowiedzi.

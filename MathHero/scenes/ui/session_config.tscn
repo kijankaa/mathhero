@@ -150,6 +150,61 @@ text = "Format pytania:"
 layout_mode = 2
 custom_minimum_size = Vector2(200, 0)
 
+[node name="OperationRow" type="HBoxContainer" parent="ConfigPanel"]
+layout_mode = 2
+
+[node name="OperationLabel" type="Label" parent="ConfigPanel/OperationRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+text = "Rodzaj działań:"
+
+[node name="OperationButton" type="OptionButton" parent="ConfigPanel/OperationRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+
+[node name="MixedContainer" type="VBoxContainer" parent="ConfigPanel"]
+layout_mode = 2
+visible = false
+
+[node name="MixedLabel" type="Label" parent="ConfigPanel/MixedContainer"]
+layout_mode = 2
+text = "Wybierz operacje:"
+
+[node name="MixedAddition" type="CheckBox" parent="ConfigPanel/MixedContainer"]
+layout_mode = 2
+button_pressed = true
+text = "Dodawanie"
+
+[node name="MixedSubtraction" type="CheckBox" parent="ConfigPanel/MixedContainer"]
+layout_mode = 2
+button_pressed = true
+text = "Odejmowanie"
+
+[node name="MixedMultiplication" type="CheckBox" parent="ConfigPanel/MixedContainer"]
+layout_mode = 2
+text = "Mnożenie"
+
+[node name="MixedDivision" type="CheckBox" parent="ConfigPanel/MixedContainer"]
+layout_mode = 2
+text = "Dzielenie"
+
+[node name="MixedOrder" type="CheckBox" parent="ConfigPanel/MixedContainer"]
+layout_mode = 2
+text = "Kolejność działań"
+
+[node name="ParenthesesRow" type="HBoxContainer" parent="ConfigPanel"]
+layout_mode = 2
+visible = false
+
+[node name="ParenthesesLabel" type="Label" parent="ConfigPanel/ParenthesesRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+text = "Nawiasy:"
+
+[node name="ParenthesesButton" type="OptionButton" parent="ConfigPanel/ParenthesesRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+
 [node name="ScoringRow" type="HBoxContainer" parent="ConfigPanel"]
 layout_mode = 2
 
