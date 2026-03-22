@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://dv8n2f4qr6yst"]
+
+[ext_resource type="Script" uid="uid://b56s2b57ybgxd" path="res://scripts/ui/summary.gd" id="1_summary"]
+
+[node name="Summary" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_summary")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.039215688, 0.039215688, 0.18039216, 1)
+
+[node name="ResultLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 200.0
+offset_bottom = 240.0
+grow_horizontal = 2
+horizontal_alignment = 1
+text = "- / -"
+
+[node name="ScoreLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 260.0
+offset_bottom = 300.0
+grow_horizontal = 2
+horizontal_alignment = 1
+text = "Punkty: -"
+
+[node name="AccuracyLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 320.0
+offset_bottom = 360.0
+grow_horizontal = 2
+horizontal_alignment = 1
+text = "Dokładność: -%"
+
+[node name="PlayAgainButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -100.0
+offset_right = 100.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "Zagraj ponownie"

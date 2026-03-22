@@ -1,0 +1,20 @@
+# Godot
+.godot/
+*.uid
+
+# Godot export (HTML5 build output)
+docs/
+
+# BMAD framework (duży, regenerowalny)
+_bmad/
+
+# Claude Code (lokalna konfiguracja)
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.tmp

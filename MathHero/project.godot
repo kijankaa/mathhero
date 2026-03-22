@@ -1,0 +1,46 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="MathHero"
+run/main_scene="uid://bnxsw80vsa415"
+config/features=PackedStringArray("4.6", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[audio]
+
+buses/default_bus_layout="uid://38w2igyr16ih"
+
+[autoload]
+
+Constants="*uid://dr03ua278wj75"
+EventBus="*uid://mxpild8blt0t"
+GameState="*uid://b0wy7e4dyve5a"
+DataManager="*uid://dutqfvxc571os"
+AudioManager="*uid://d2717opqx3na3"
+SceneManager="*uid://c1rcl1nt2827d"
+
+[display]
+
+window/size/viewport_width=1366
+window/size/viewport_height=1024
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

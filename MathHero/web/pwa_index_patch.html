@@ -1,0 +1,51 @@
+<!--
+  pwa_index_patch.html
+
+  Po eksporcie HTML5 z Godot, wklej poniższy kod do wygenerowanego index.html
+  w sekcji <head>, PRZED </head>.
+
+  Następnie skopiuj index.html + wszystkie pliki Godot do docs/
+  i skopiuj web/manifest.json, web/service_worker.js, web/icons/ do docs/
+-->
+
+<!-- PWA: manifest -->
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MathHero">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<!-- PWA: Service Worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service_worker.js')
+        .then(reg => console.log('[SW] Zarejestrowany:', reg.scope))
+        .catch(err => console.error('[SW] Błąd rejestracji:', err));
+    });
+  }
+</script>
+
+<!-- Landscape orientation lock -->
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+  }
+  @media (orientation: portrait) {
+    body::before {
+      content: "Obróć urządzenie poziomo";
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      inset: 0;
+      background: #0a0a2e;
+      color: #ffffff;
+      font-size: 24px;
+      font-family: sans-serif;
+      z-index: 9999;
+    }
+    canvas { display: none; }
+  }
+</style>
