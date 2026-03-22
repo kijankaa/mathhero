@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://bx7t3m6n9qpfw"]
+[gd_scene format=3 uid="uid://bx7t3m6oaqpfw"]
 
 [ext_resource type="Script" path="res://scripts/ui/profile_create.gd" id="1_profcrt"]
 

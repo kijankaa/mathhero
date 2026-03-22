@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://dm4rx9p2k8vcn"]
+[gd_scene format=3 uid="uid://dm4ryap2k8vcn"]
 
 [ext_resource type="Script" path="res://scripts/ui/profile_select.gd" id="1_profsel"]
 

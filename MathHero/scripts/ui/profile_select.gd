@@ -1,4 +1,5 @@
 # scripts/ui/profile_select.gd
+class_name ProfileSelect
 extends Control
 
 @onready var _profiles_container: HBoxContainer = $ProfilesContainer

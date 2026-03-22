@@ -9,7 +9,7 @@ const SCENES: Dictionary = {
 	Constants.SCENE_MAIN_MENU:       "res://scenes/ui/main_menu.tscn",
 	Constants.SCENE_SESSION:         "res://scenes/gameplay/session.tscn",
 	Constants.SCENE_SUMMARY:         "res://scenes/ui/summary.tscn",
-	Constants.SCENE_CONFIG:          "res://scenes/ui/config.tscn",
+	Constants.SCENE_CONFIG:          "res://scenes/ui/session_config.tscn",
 	Constants.SCENE_PROFILE_SELECT:  "res://scenes/ui/profile_select.tscn",
 	Constants.SCENE_PROFILE_CREATE:  "res://scenes/ui/profile_create.tscn",
 	Constants.SCENE_STATS:           "res://scenes/ui/stats.tscn",

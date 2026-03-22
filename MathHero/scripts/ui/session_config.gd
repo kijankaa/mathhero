@@ -1,6 +1,8 @@
 # scripts/ui/session_config.gd
 extends Control
 
+const ProfileSelectScript = preload("res://scripts/ui/profile_select.gd")
+
 const SYSTEM_PRESETS: Array[Dictionary] = [
 	{"name": "Łatwe",       "config": {"operation_type": "addition", "question_format": "horizontal", "question_count": 10, "min_value": 1,  "max_value": 20,  "time_limit_enabled": false, "time_limit_seconds": 30.0, "answer_mode": "keyboard",          "on_error_mode": "show_answer", "retry_count": 0, "scoring_base_points": true,  "scoring_time_bonus": false, "scoring_streak_multiplier": false, "scoring_error_penalty": false, "base_points_value": 10}},
 	{"name": "Standardowe", "config": {"operation_type": "addition", "question_format": "horizontal", "question_count": 10, "min_value": 1,  "max_value": 100, "time_limit_enabled": false, "time_limit_seconds": 30.0, "answer_mode": "keyboard",          "on_error_mode": "show_answer", "retry_count": 0, "scoring_base_points": true,  "scoring_time_bonus": false, "scoring_streak_multiplier": false, "scoring_error_penalty": false, "base_points_value": 10}},
@@ -177,9 +179,9 @@ func _on_save_preset_pressed() -> void:
 
 
 func _save_current_profile() -> void:
-	var profiles := ProfileSelect.load_profiles()
+	var profiles := ProfileSelectScript.load_profiles()
 	for i in profiles.size():
 		if profiles[i].id == GameState.current_profile.id:
 			profiles[i] = GameState.current_profile
-			ProfileSelect.save_profiles(profiles)
+			ProfileSelectScript.save_profiles(profiles)
 			return

@@ -1,6 +1,8 @@
 # scripts/ui/profile_create.gd
 extends Control
 
+const ProfileSelectScript = preload("res://scripts/ui/profile_select.gd")
+
 @onready var _name_input: LineEdit = $NameInput
 @onready var _avatars_container: GridContainer = $AvatarsContainer
 @onready var _create_button: Button = $CreateButton
@@ -50,14 +52,14 @@ func _on_create_pressed() -> void:
 		_error_label.text = "Nazwa może mieć max. 20 znaków"
 		return
 
-	var profiles := ProfileSelect.load_profiles()
+	var profiles := ProfileSelectScript.load_profiles()
 	if profiles.size() >= Constants.MAX_PROFILES:
 		_error_label.text = "Maksymalnie %d profili" % Constants.MAX_PROFILES
 		return
 
 	var profile := PlayerProfile.create(name_text, _selected_avatar)
 	profiles.append(profile)
-	ProfileSelect.save_profiles(profiles)
+	ProfileSelectScript.save_profiles(profiles)
 
 	GameState.set_profile(profile)
 	SceneManager.go_to(Constants.SCENE_CONFIG)
