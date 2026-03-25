@@ -1,7 +1,7 @@
 # scripts/reward_system.gd
-# Statyczna klasa logiki systemu nagród.
+# Autoload — logika systemu nagród.
 # Oblicza gwiazdki, sprawdza odznaki, definicje poziomów i sklepu.
-class_name RewardSystem
+extends Node
 
 # ─── Poziomy bohatera ─────────────────────────────────────────────────────────
 

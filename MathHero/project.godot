@@ -22,6 +22,7 @@ buses/default_bus_layout="uid://38w2igyr16ih"
 [autoload]
 
 Constants="*uid://dr03ua278wj75"
+RewardSystem="*res://scripts/reward_system.gd"
 EventBus="*uid://mxpild8blt0t"
 GameState="*uid://b0wy7e4dyve5a"
 DataManager="*uid://dutqfvxc571os"
