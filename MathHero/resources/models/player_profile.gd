@@ -27,7 +27,7 @@ static func create(profile_name: String, avatar: int) -> PlayerProfile:
 	p.last_config = SessionConfig.create_default().to_dict()
 	# Przyznaj darmowe itemy na start
 	p.owned_items = ["helmet_1", "suit_1", "backpack_1", "boots_1", "gloves_1"]
-	p.equipped_costume = RewardSystem.DEFAULT_COSTUME.duplicate()
+	p.equipped_costume = {"helmet": "helmet_1", "suit": "suit_1", "backpack": "backpack_1", "boots": "boots_1", "gloves": "gloves_1"}
 	return p
 
 
@@ -59,7 +59,7 @@ static func from_dict(d: Dictionary) -> PlayerProfile:
 	p.stars = d.get("stars", 0)
 	p.stars_total_earned = d.get("stars_total_earned", 0)
 	p.owned_items = d.get("owned_items", ["helmet_1", "suit_1", "backpack_1", "boots_1", "gloves_1"])
-	p.equipped_costume = d.get("equipped_costume", RewardSystem.DEFAULT_COSTUME.duplicate())
+	p.equipped_costume = d.get("equipped_costume", {"helmet": "helmet_1", "suit": "suit_1", "backpack": "backpack_1", "boots": "boots_1", "gloves": "gloves_1"})
 	p.unlocked_badges = d.get("unlocked_badges", [])
 	p.session_count = d.get("session_count", 0)
 	p.total_correct = d.get("total_correct", 0)

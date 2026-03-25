@@ -1,5 +1,6 @@
 # autoloads/constants.gd
 # Wszystkie stałe aplikacji. Zero magic numbers w reszcie kodu.
+extends Node
 
 # Wersja aplikacji
 const APP_VERSION: String = "0.1.0"
