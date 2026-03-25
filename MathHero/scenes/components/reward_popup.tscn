@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://c8xrp2nq7jm4t"]
+
+[ext_resource type="Script" path="res://scripts/components/reward_popup.gd" id="1_rpopup"]
+
+[node name="RewardPopup" type="Control"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = -200.0
+offset_right = 250.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("1_rpopup")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="StarsLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = ""
+theme_override_font_sizes/font_size = 28
+
+[node name="BadgesLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+text = ""
+theme_override_font_sizes/font_size = 20

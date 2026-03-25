@@ -1,0 +1,102 @@
+[gd_scene format=3 uid="uid://dx9wk4y6b3nh5"]
+
+[ext_resource type="Script" path="res://scripts/ui/rewards.gd" id="1_rewards"]
+
+[node name="Rewards" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_rewards")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.039215688, 0.039215688, 0.18039216, 1)
+
+[node name="BackButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_right = 160.0
+offset_bottom = 50.0
+text = "← Wstecz"
+theme_override_font_sizes/font_size = 18
+
+[node name="TabContainer" type="TabContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Bohater" type="VBoxContainer" parent="TabContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="HeroDisplay" type="Label" parent="TabContainer/Bohater"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "⛑️ 🥼 🎒\n    👟 🧤"
+theme_override_font_sizes/font_size = 48
+
+[node name="LevelLabel" type="Label" parent="TabContainer/Bohater"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Poziom 0: Rekrut"
+theme_override_font_sizes/font_size = 24
+
+[node name="StarsLabel" type="Label" parent="TabContainer/Bohater"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "⭐ 0 gwiazdek"
+theme_override_font_sizes/font_size = 20
+
+[node name="ProgressBar" type="ProgressBar" parent="TabContainer/Bohater"]
+layout_mode = 2
+custom_minimum_size = Vector2(400.0, 24.0)
+min_value = 0.0
+max_value = 1.0
+step = 0.001
+value = 0.0
+
+[node name="ProgressLabel" type="Label" parent="TabContainer/Bohater"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "20 gwiazdek do: Kosmonauta"
+theme_override_font_sizes/font_size = 16
+
+[node name="Sklep" type="VBoxContainer" parent="TabContainer"]
+layout_mode = 2
+
+[node name="CurrentStarsLabel" type="Label" parent="TabContainer/Sklep"]
+layout_mode = 2
+text = "Masz: ⭐ 0"
+theme_override_font_sizes/font_size = 20
+
+[node name="ScrollContainer" type="ScrollContainer" parent="TabContainer/Sklep"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ItemsContainer" type="VBoxContainer" parent="TabContainer/Sklep/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Odznaki" type="VBoxContainer" parent="TabContainer"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="TabContainer/Odznaki"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BadgesContainer" type="GridContainer" parent="TabContainer/Odznaki/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 4
