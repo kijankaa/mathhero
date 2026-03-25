@@ -132,5 +132,64 @@ grow_horizontal = 2
 grow_vertical = 0
 text = "Kolekcja 🏆"
 
+[node name="MissionResultLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 570.0
+offset_bottom = 610.0
+grow_horizontal = 2
+horizontal_alignment = 1
+text = ""
+theme_override_font_sizes/font_size = 20
+visible = false
+
+[node name="BonusLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 620.0
+offset_bottom = 680.0
+grow_horizontal = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+text = ""
+theme_override_font_sizes/font_size = 16
+visible = false
+
+[node name="BonusButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -120.0
+offset_top = -200.0
+offset_right = 120.0
+offset_bottom = -160.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "🎯 Spróbuj misji!"
+theme_override_font_sizes/font_size = 16
+visible = false
+
+[node name="BeatRecordButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -120.0
+offset_top = -250.0
+offset_right = 120.0
+offset_bottom = -210.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "🏆 Pobij Rekord"
+theme_override_font_sizes/font_size = 16
+visible = false
+
 [node name="RewardPopup" parent="." instance=ExtResource("2_rpopup")]
 layout_mode = 1

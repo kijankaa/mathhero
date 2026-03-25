@@ -50,6 +50,9 @@ const BADGE_DEFINITIONS: Dictionary = {
 	"correct_1000":     {"name": "Tysiąc Odpowiedzi", "desc": "1000 poprawnych odpowiedzi łącznie", "emoji": "🌟"},
 	"level_kosmonauta": {"name": "Awans: Kosmonauta", "desc": "Osiągnij poziom Kosmonauty",         "emoji": "👨‍🚀"},
 	"level_mathhero":   {"name": "MathHero!",         "desc": "Osiągnij poziom MathHero",           "emoji": "🦸"},
+	"daily_challenge":  {"name": "Wyzwanie Dnia",     "desc": "Ukończ codzienne wyzwanie",          "emoji": "☀️"},
+	"mission_complete": {"name": "Misjonarz",          "desc": "Ukończ pierwszą misję galaktyki",    "emoji": "🚀"},
+	"mission_all":      {"name": "Zdobywca Galaktyki", "desc": "Ukończ wszystkie 8 misji",           "emoji": "🌌"},
 }
 
 # ─── Gwiazdki ─────────────────────────────────────────────────────────────────
@@ -127,6 +130,10 @@ static func check_new_badges(profile: PlayerProfile, result: SessionResult) -> A
 	var level: int = get_hero_level(profile.stars_total_earned)
 	_check("level_kosmonauta", not "level_kosmonauta" in already and level >= 1,                       new_badges)
 	_check("level_mathhero",   not "level_mathhero" in already and level >= 4,                         new_badges)
+
+	_check("daily_challenge",  not "daily_challenge" in already and profile.daily_challenge_streak >= 1, new_badges)
+	_check("mission_complete", not "mission_complete" in already and profile.completed_missions.size() >= 1, new_badges)
+	_check("mission_all",      not "mission_all" in already and profile.completed_missions.size() >= 8,      new_badges)
 
 	return new_badges
 

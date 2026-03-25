@@ -18,6 +18,12 @@ var session_count: int = 0              # łączna liczba ukończonych sesji
 var total_correct: int = 0              # łączna liczba poprawnych odpowiedzi
 var max_streak_ever: int = 0            # najlepsza seria kiedykolwiek
 
+# Progresja galaktyki (Epic 6)
+var completed_missions: Array[String] = []  # ID ukończonych misji
+var daily_challenge_date: String = ""        # "YYYY-MM-DD" ostatnio ukończonego wyzwania
+var daily_challenge_streak: int = 0          # seria dziennych wyzwań
+var best_session_score: int = 0              # najlepszy wynik kiedykolwiek (dowolna sesja)
+
 
 static func create(profile_name: String, avatar: int) -> PlayerProfile:
 	var p := PlayerProfile.new()
@@ -46,6 +52,10 @@ func to_dict() -> Dictionary:
 		"session_count": session_count,
 		"total_correct": total_correct,
 		"max_streak_ever": max_streak_ever,
+		"completed_missions": completed_missions,
+		"daily_challenge_date": daily_challenge_date,
+		"daily_challenge_streak": daily_challenge_streak,
+		"best_session_score": best_session_score,
 	}
 
 
@@ -64,4 +74,8 @@ static func from_dict(d: Dictionary) -> PlayerProfile:
 	p.session_count = d.get("session_count", 0)
 	p.total_correct = d.get("total_correct", 0)
 	p.max_streak_ever = d.get("max_streak_ever", 0)
+	p.completed_missions = d.get("completed_missions", [])
+	p.daily_challenge_date = d.get("daily_challenge_date", "")
+	p.daily_challenge_streak = d.get("daily_challenge_streak", 0)
+	p.best_session_score = d.get("best_session_score", 0)
 	return p

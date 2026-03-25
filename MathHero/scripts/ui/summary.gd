@@ -11,6 +11,10 @@ extends Control
 @onready var _config_button: Button = $ConfigButton
 @onready var _rewards_button: Button = $RewardsButton
 @onready var _reward_popup: Control = $RewardPopup
+@onready var _mission_result_label: Label = $MissionResultLabel
+@onready var _bonus_label: Label = $BonusLabel
+@onready var _bonus_button: Button = $BonusButton
+@onready var _beat_record_button: Button = $BeatRecordButton
 
 var _result: SessionResult = null
 var _stars_earned: int = 0
@@ -21,10 +25,15 @@ func _ready() -> void:
 	_play_again_button.pressed.connect(_on_play_again_pressed)
 	_config_button.pressed.connect(_on_config_pressed)
 	_rewards_button.pressed.connect(_on_rewards_pressed)
+	_beat_record_button.pressed.connect(_on_beat_record_pressed)
 
 	_level_up_label.visible = false
 	_new_badges_label.visible = false
 	_stars_earned_label.text = ""
+	_mission_result_label.visible = false
+	_bonus_label.visible = false
+	_bonus_button.visible = false
+	_beat_record_button.visible = false
 
 	if GameState.last_session_result != null:
 		_result = GameState.last_session_result
@@ -54,6 +63,17 @@ func _process_rewards() -> void:
 	if _result.max_streak > profile.max_streak_ever:
 		profile.max_streak_ever = _result.max_streak
 
+	# Aktualizuj najlepszy wynik
+	if _result.score > profile.best_session_score:
+		profile.best_session_score = _result.score
+
+	# Sprawdź ukończenie misji lub dziennego wyzwania
+	if GameState.active_mission_id != "":
+		_check_mission_completion(profile)
+
+	# Reset kontekstu misji
+	GameState.active_mission_id = ""
+
 	# Sprawdź nowe odznaki (po aktualizacji danych profilu)
 	_new_badges = RewardSystem.check_new_badges(profile, _result)
 	for badge_id: String in _new_badges:
@@ -79,6 +99,57 @@ func _process_rewards() -> void:
 		print("[Summary] Nagrody: gwiazdki=", _stars_earned, " odznaki=", _new_badges)
 
 
+## Sprawdza ukończenie misji galaktyki lub dziennego wyzwania.
+func _check_mission_completion(profile: PlayerProfile) -> void:
+	var mission_id: String = GameState.active_mission_id
+
+	# Obsługa dziennego wyzwania
+	if mission_id == "daily":
+		var today: String = GalaxySystem.get_daily_date()
+		if profile.daily_challenge_date != today:
+			# Sprawdź serię
+			var yesterday: Dictionary = Time.get_datetime_dict_from_system()
+			# Prosta heurystyka serii: jeśli wczoraj była data - 1 dzień
+			profile.daily_challenge_date = today
+			profile.daily_challenge_streak += 1
+			var daily_reward: int = 3
+			profile.stars += daily_reward
+			profile.stars_total_earned += daily_reward
+			EventBus.stars_earned.emit(daily_reward, profile.stars)
+			_mission_result_label.text = "☀️ Wyzwanie dnia ukończone! +%d⭐ (Seria: %d)" % [daily_reward, profile.daily_challenge_streak]
+			_mission_result_label.visible = true
+			# Sprawdź odznakę za wyzwanie
+			var daily_badges: Array[String] = RewardSystem.check_new_badges(profile, _result)
+			for badge_id: String in daily_badges:
+				if not badge_id in profile.unlocked_badges:
+					profile.unlocked_badges.append(badge_id)
+		return
+
+	# Obsługa zwykłej misji
+	var mission: Dictionary = GalaxySystem.get_mission(mission_id)
+	if mission.is_empty():
+		return
+
+	var req_acc: float = mission.get("req_acc", 0.7)
+	if _result.get_accuracy() >= req_acc and not mission_id in profile.completed_missions:
+		profile.completed_missions.append(mission_id)
+		var reward: int = mission.get("reward", 0)
+		profile.stars += reward
+		profile.stars_total_earned += reward
+		EventBus.mission_completed.emit(mission_id)
+		EventBus.stars_earned.emit(reward, profile.stars)
+		_mission_result_label.text = "✅ Misja ukończona! +%d⭐" % reward
+		_mission_result_label.visible = true
+		# Sprawdź nowe odznaki za misję
+		var new_mission_badges: Array[String] = RewardSystem.check_new_badges(profile, _result)
+		for badge_id: String in new_mission_badges:
+			if not badge_id in profile.unlocked_badges:
+				profile.unlocked_badges.append(badge_id)
+	elif _result.get_accuracy() < req_acc:
+		_mission_result_label.text = "❌ Misja nieudana (%.0f%% / %.0f%% wymagane)" % [_result.get_accuracy() * 100.0, req_acc * 100.0]
+		_mission_result_label.visible = true
+
+
 func _update_ui() -> void:
 	if _result == null:
 		return
@@ -100,11 +171,38 @@ func _update_ui() -> void:
 		_new_badges_label.text = "Nowe odznaki:\n" + "\n".join(badge_names)
 		_new_badges_label.visible = true
 
+	# Przycisk Pobij Rekord
+	if GameState.has_active_profile() and GameState.current_profile.best_session_score > 0:
+		_beat_record_button.text = "🏆 Pobij Rekord: %d" % GameState.current_profile.best_session_score
+		_beat_record_button.visible = true
+
+	# Misja bonusowa (tylko jeśli nie byliśmy w misji)
+	if GameState.active_mission_id == "":
+		_show_bonus_mission()
+
 
 func _show_reward_popup() -> void:
 	if _stars_earned > 0 or not _new_badges.is_empty():
 		if is_instance_valid(_reward_popup) and _reward_popup.has_method("show_rewards"):
 			_reward_popup.show_rewards(_stars_earned, _new_badges)
+
+
+## Wyświetla sugestię misji bonusowej po wolnej grze.
+func _show_bonus_mission() -> void:
+	if not GameState.has_active_profile():
+		return
+	var bonus: Dictionary = GalaxySystem.get_bonus_mission(GameState.current_profile)
+	if bonus.is_empty():
+		return
+	_bonus_label.text = "🎯 Misja bonusowa: %s %s\n%s" % [bonus.get("emoji", ""), bonus.get("name", ""), bonus.get("desc", "")]
+	_bonus_label.visible = true
+	_bonus_button.visible = true
+	_bonus_button.pressed.connect(func() -> void:
+		var config: SessionConfig = GalaxySystem.get_mission_config(bonus.get("id", ""))
+		GameState.current_session_config = config
+		GameState.active_mission_id = bonus.get("id", "")
+		SceneManager.go_to(Constants.SCENE_SESSION)
+	)
 
 
 ## Zapisuje aktywny profil (load → update → save all).
@@ -127,3 +225,7 @@ func _on_config_pressed() -> void:
 
 func _on_rewards_pressed() -> void:
 	SceneManager.go_to(Constants.SCENE_REWARDS)
+
+
+func _on_beat_record_pressed() -> void:
+	SceneManager.go_to(Constants.SCENE_SESSION)

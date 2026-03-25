@@ -1,0 +1,96 @@
+[gd_scene format=3 uid="uid://bk7m3p9nq2xvf"]
+
+[ext_resource type="Script" uid="uid://cgalaxyscript1" path="res://scripts/ui/galaxy.gd" id="1_galaxy"]
+
+[node name="Galaxy" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_galaxy")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.039215688, 0.039215688, 0.18039216, 1)
+
+[node name="BackButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 170.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "← Wstecz"
+theme_override_font_sizes/font_size = 18
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 10.0
+offset_bottom = 50.0
+grow_horizontal = 2
+horizontal_alignment = 1
+text = "🌌 Galaktyka Misji"
+theme_override_font_sizes/font_size = 28
+
+[node name="DailyPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.0
+anchor_right = 0.5
+anchor_bottom = 0.0
+offset_left = -350.0
+offset_top = 60.0
+offset_right = 350.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="DailyPanel"]
+layout_mode = 2
+
+[node name="DailyTitleLabel" type="Label" parent="DailyPanel/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "☀️ Wyzwanie Dnia"
+theme_override_font_sizes/font_size = 22
+
+[node name="DailyDescLabel" type="Label" parent="DailyPanel/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = ""
+theme_override_font_sizes/font_size = 16
+
+[node name="DailyStartButton" type="Button" parent="DailyPanel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 50)
+size_flags_horizontal = 4
+text = "Zagraj!"
+theme_override_font_sizes/font_size = 18
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 190.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PlanetsContainer" type="VBoxContainer" parent="ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3

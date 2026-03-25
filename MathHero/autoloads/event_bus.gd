@@ -20,5 +20,8 @@ signal stars_earned(amount: int, total: int)
 signal achievement_unlocked(achievement_id: String)
 signal costume_purchased(item_id: String)
 
+# Galaktyka misji (Epic 6)
+signal mission_completed(mission_id: String)
+
 # UI
 signal scene_changed(scene_name: String)

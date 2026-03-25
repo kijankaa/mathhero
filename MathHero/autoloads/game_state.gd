@@ -16,6 +16,9 @@ var current_session_state: Resource = null
 # Wynik ostatniej sesji (odczytywany przez Summary)
 var last_session_result: Resource = null
 
+# Aktywna misja galaktyki (Epic 6); "" = wolna gra, "daily" = dzienne wyzwanie
+var active_mission_id: String = ""
+
 
 func _ready() -> void:
 	if OS.is_debug_build():
