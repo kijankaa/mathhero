@@ -1,0 +1,97 @@
+[gd_scene format=3 uid="uid://astronaut_display_comp"]
+
+[ext_resource type="Script" path="res://scripts/components/astronaut_display.gd" id="1_adisp"]
+[ext_resource type="Texture2D" path="res://assets/images/astronaut.svg" id="2_astro"]
+
+[node name="AstronautDisplay" type="Control"]
+custom_minimum_size = Vector2(180, 260)
+script = ExtResource("1_adisp")
+
+[node name="GlowRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0)
+mouse_filter = 2
+
+[node name="Body" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_astro")
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="HelmetLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = -4.0
+offset_bottom = 52.0
+grow_horizontal = 2
+horizontal_alignment = 1
+text = "⛑️"
+theme_override_font_sizes/font_size = 38
+mouse_filter = 2
+
+[node name="BackpackLabel" type="Label" parent="."]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_top = 0.3
+anchor_bottom = 0.3
+offset_left = -42.0
+offset_top = 10.0
+offset_right = 4.0
+offset_bottom = 46.0
+grow_horizontal = 0
+text = "🎒"
+theme_override_font_sizes/font_size = 26
+mouse_filter = 2
+
+[node name="GlovesL" type="Label" parent="."]
+layout_mode = 1
+anchor_top = 0.45
+anchor_bottom = 0.45
+offset_left = -4.0
+offset_top = 0.0
+offset_right = 36.0
+offset_bottom = 36.0
+text = "🧤"
+theme_override_font_sizes/font_size = 26
+mouse_filter = 2
+
+[node name="GlovesR" type="Label" parent="."]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_top = 0.45
+anchor_bottom = 0.45
+offset_left = -36.0
+offset_top = 0.0
+offset_right = 4.0
+offset_bottom = 36.0
+text = "🧤"
+theme_override_font_sizes/font_size = 26
+mouse_filter = 2
+
+[node name="BootsLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -46.0
+offset_bottom = 4.0
+grow_horizontal = 2
+horizontal_alignment = 1
+text = "👟"
+theme_override_font_sizes/font_size = 30
+mouse_filter = 2

@@ -2,7 +2,7 @@
 extends Control
 
 # ── Zakładka Bohater ──────────────────────────────────────────────────────────
-@onready var _hero_display: Label = $TabContainer/Bohater/HeroDisplay
+@onready var _hero_display: Control = $TabContainer/Bohater/HeroDisplay
 @onready var _hero_level_label: Label = $TabContainer/Bohater/LevelLabel
 @onready var _stars_label: Label = $TabContainer/Bohater/StarsLabel
 @onready var _progress_bar: ProgressBar = $TabContainer/Bohater/ProgressBar
@@ -44,7 +44,7 @@ func _ready() -> void:
 
 func _refresh_hero_tab() -> void:
 	var profile: PlayerProfile = GameState.current_profile
-	_hero_display.text = RewardSystem.get_costume_display(profile)
+	_hero_display.refresh(profile)
 
 	var progress: Dictionary = RewardSystem.get_level_progress(profile.stars_total_earned)
 	_hero_level_label.text = "Poziom %d: %s" % [progress.level, progress.name]
