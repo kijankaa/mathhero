@@ -1,4 +1,6 @@
-[gd_resource type="Theme" load_steps=9 format=3]
+[gd_resource type="Theme" load_steps=10 format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/Orbitron.ttf" id="1_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
 bg_color = Color(0.063, 0.063, 0.42, 1)
@@ -115,6 +117,7 @@ content_margin_bottom = 8.0
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
 
 [resource]
+default_font = ExtResource("1_font")
 default_font_size = 20
 Button/colors/font_color = Color(1, 1, 1, 1)
 Button/colors/font_hover_color = Color(1, 0.96, 0.7, 1)
