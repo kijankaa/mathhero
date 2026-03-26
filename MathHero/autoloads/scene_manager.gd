@@ -15,6 +15,7 @@ const SCENES: Dictionary = {
 	Constants.SCENE_STATS:           "res://scenes/ui/stats.tscn",
 	Constants.SCENE_REWARDS:         "res://scenes/ui/rewards.tscn",
 	Constants.SCENE_GALAXY:          "res://scenes/ui/galaxy.tscn",
+	Constants.SCENE_ONBOARDING:      "res://scenes/ui/onboarding.tscn",
 }
 
 var _current_scene: String = ""

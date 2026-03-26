@@ -32,6 +32,18 @@ const SCENE_PROFILE_CREATE: String = "profile_create"
 const SCENE_STATS: String = "stats"
 const SCENE_REWARDS: String = "rewards"
 const SCENE_GALAXY: String = "galaxy"
+const SCENE_ONBOARDING: String = "onboarding"
+
+# Klucze storage — Epic 8
+const STORAGE_KEY_ONBOARDING: String = "mathhero_onboarding_done"
+
+# Audio — ścieżki plików (null-safe: brak pliku = cisza)
+const SFX_CORRECT: String = "res://assets/audio/sfx_correct.ogg"
+const SFX_WRONG: String = "res://assets/audio/sfx_wrong.ogg"
+const SFX_STREAK: String = "res://assets/audio/sfx_streak.ogg"
+const SFX_FANFARE: String = "res://assets/audio/sfx_fanfare.ogg"
+const SFX_CLICK: String = "res://assets/audio/sfx_click.ogg"
+const MUSIC_AMBIENT: String = "res://assets/audio/music_ambient.ogg"
 
 # Typy operacji matematycznych
 const OP_ADDITION: String = "addition"

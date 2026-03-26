@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dx9wk4y6b3nh5"]
 
 [ext_resource type="Script" path="res://scripts/ui/rewards.gd" id="1_rewards"]
+[ext_resource type="PackedScene" path="res://scenes/components/space_background.tscn" id="92_spacebg"]
 
 [node name="Rewards" type="Control"]
 layout_mode = 3
@@ -11,14 +12,8 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_rewards")
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="SpaceBackground" parent="." instance=ExtResource("92_spacebg")]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.039215688, 0.039215688, 0.18039216, 1)
 
 [node name="BackButton" type="Button" parent="."]
 layout_mode = 1

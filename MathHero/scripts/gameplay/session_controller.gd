@@ -8,11 +8,16 @@ extends Control
 @onready var _progress_label: Label = $ProgressLabel
 @onready var _score_label: Label = $ScoreLabel
 @onready var _feedback_label: Label = $FeedbackLabel
+@onready var _particles: CPUParticles2D = $ParticlesCorrect
 
 var _state: SessionState = null
 var _current_question: Question = null
 var _question_start_time: float = 0.0
 var _waiting_for_next: bool = false
+
+var _sfx_correct: AudioStream = null
+var _sfx_wrong: AudioStream = null
+var _sfx_streak: AudioStream = null
 
 
 func _ready() -> void:
@@ -20,6 +25,13 @@ func _ready() -> void:
 	_keyboard.backspace_pressed.connect(_on_backspace_pressed)
 	_keyboard.confirm_pressed.connect(_on_confirm_pressed)
 	_multiple_choice.answer_selected.connect(_on_choice_selected)
+
+	if ResourceLoader.exists(Constants.SFX_CORRECT):
+		_sfx_correct = load(Constants.SFX_CORRECT)
+	if ResourceLoader.exists(Constants.SFX_WRONG):
+		_sfx_wrong = load(Constants.SFX_WRONG)
+	if ResourceLoader.exists(Constants.SFX_STREAK):
+		_sfx_streak = load(Constants.SFX_STREAK)
 
 	_start_session()
 
@@ -117,11 +129,17 @@ func _process_answer(answer: int) -> void:
 		_question_display.show_feedback(true)
 		_feedback_label.text = "Brawo!"
 		_feedback_label.modulate = Color.GREEN
+		AudioManager.play_sfx(_sfx_streak if _state.streak >= 3 else _sfx_correct)
+		if is_instance_valid(_particles):
+			_particles.emit_burst()
+		_animate_feedback_correct()
 	else:
 		_state.on_incorrect_answer(_current_question)
 		_question_display.show_feedback(false, _current_question.correct_answer)
 		_feedback_label.text = "Spróbuj następnym razem"
 		_feedback_label.modulate = Color.RED
+		AudioManager.play_sfx(_sfx_wrong)
+		_animate_feedback_wrong()
 
 	if _state.config.answer_mode == "multiple_choice":
 		_multiple_choice.show_result(answer)
@@ -130,6 +148,21 @@ func _process_answer(answer: int) -> void:
 
 	await get_tree().create_timer(1.5).timeout
 	_show_next_question()
+
+
+func _animate_feedback_correct() -> void:
+	var tween: Tween = get_tree().create_tween()
+	tween.tween_property(_question_display, "scale", Vector2(1.1, 1.1), 0.1)
+	tween.tween_property(_question_display, "scale", Vector2(1.0, 1.0), 0.1)
+
+
+func _animate_feedback_wrong() -> void:
+	var original_pos: Vector2 = _question_display.position
+	var tween: Tween = get_tree().create_tween()
+	tween.tween_property(_question_display, "position", original_pos + Vector2(12, 0), 0.05)
+	tween.tween_property(_question_display, "position", original_pos - Vector2(12, 0), 0.05)
+	tween.tween_property(_question_display, "position", original_pos + Vector2(8, 0), 0.04)
+	tween.tween_property(_question_display, "position", original_pos, 0.04)
 
 
 ## Zwraca instancję MathOperation dla podanego typu.

@@ -62,7 +62,11 @@ func _on_create_pressed() -> void:
 	ProfileSelectScript.save_profiles(profiles)
 
 	GameState.set_profile(profile)
-	SceneManager.go_to(Constants.SCENE_MAIN_MENU)
+	var onboarding_done: Variant = DataManager.load_data(Constants.STORAGE_KEY_ONBOARDING)
+	if onboarding_done == null:
+		SceneManager.go_to(Constants.SCENE_ONBOARDING)
+	else:
+		SceneManager.go_to(Constants.SCENE_MAIN_MENU)
 
 
 func _on_cancel_pressed() -> void:

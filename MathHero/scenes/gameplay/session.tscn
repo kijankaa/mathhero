@@ -4,6 +4,8 @@
 [ext_resource type="PackedScene" uid="uid://b1fnhxivn4jsb" path="res://scenes/components/question_display.tscn" id="2_qdisplay"]
 [ext_resource type="PackedScene" uid="uid://bphbswl0817dk" path="res://scenes/components/numeric_keyboard.tscn" id="3_keyboard"]
 [ext_resource type="PackedScene" path="res://scenes/components/multiple_choice.tscn" id="4_mulcho"]
+[ext_resource type="PackedScene" path="res://scenes/components/space_background.tscn" id="5_spacebg"]
+[ext_resource type="PackedScene" path="res://scenes/components/particles_correct.tscn" id="6_particles"]
 
 [node name="Session" type="Control"]
 layout_mode = 3
@@ -14,14 +16,11 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_session")
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="SpaceBackground" parent="." instance=ExtResource("5_spacebg")]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.039215688, 0.039215688, 0.18039216, 1)
+
+[node name="ParticlesCorrect" parent="." instance=ExtResource("6_particles")]
+position = Vector2(683, 350)
 
 [node name="ScoreLabel" type="Label" parent="."]
 layout_mode = 1

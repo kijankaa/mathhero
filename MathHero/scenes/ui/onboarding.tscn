@@ -1,0 +1,103 @@
+[gd_scene format=3 uid="uid://onboarding_scene_epic8"]
+
+[ext_resource type="Script" path="res://scripts/ui/onboarding.gd" id="1_onboarding"]
+[ext_resource type="PackedScene" path="res://scenes/components/space_background.tscn" id="2_spacebg"]
+
+[node name="Onboarding" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_onboarding")
+
+[node name="SpaceBackground" parent="." instance=ExtResource("2_spacebg")]
+layout_mode = 1
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(480, 0)
+theme_override_constants/separation = 30
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 1
+text = "Witaj w MathHero!"
+theme_override_font_sizes/font_size = 28
+
+[node name="SlideLabel" type="Label" parent="CenterContainer/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 1
+autowrap_mode = 3
+text = ""
+theme_override_font_sizes/font_size = 18
+
+[node name="DotsContainer" type="HBoxContainer" parent="CenterContainer/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="Dot0" type="ColorRect" parent="CenterContainer/VBox/DotsContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(12, 12)
+color = Color(1, 1, 1, 1)
+
+[node name="Dot1" type="ColorRect" parent="CenterContainer/VBox/DotsContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(12, 12)
+color = Color(1, 1, 1, 0.3)
+
+[node name="Dot2" type="ColorRect" parent="CenterContainer/VBox/DotsContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(12, 12)
+color = Color(1, 1, 1, 0.3)
+
+[node name="Dot3" type="ColorRect" parent="CenterContainer/VBox/DotsContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(12, 12)
+color = Color(1, 1, 1, 0.3)
+
+[node name="NextButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -120.0
+offset_top = -80.0
+offset_right = 120.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "Dalej →"
+theme_override_font_sizes/font_size = 20
+
+[node name="SkipButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 4
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -130.0
+offset_top = -50.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "Pomiń"
+theme_override_font_sizes/font_size = 16

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b56s2b57ybgxd" path="res://scripts/ui/summary.gd" id="1_summary"]
 [ext_resource type="PackedScene" path="res://scenes/components/reward_popup.tscn" id="2_rpopup"]
+[ext_resource type="PackedScene" path="res://scenes/components/space_background.tscn" id="98_spacebg"]
 
 [node name="Summary" type="Control"]
 layout_mode = 3
@@ -12,14 +13,8 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_summary")
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="SpaceBackground" parent="." instance=ExtResource("98_spacebg")]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.039215688, 0.039215688, 0.18039216, 1)
 
 [node name="ResultLabel" type="Label" parent="."]
 layout_mode = 1
