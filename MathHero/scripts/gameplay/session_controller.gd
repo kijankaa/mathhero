@@ -59,7 +59,7 @@ func _start_session() -> void:
 func _show_next_question() -> void:
 	_current_question = _state.get_next_question()
 
-	if _current_question == null or _state.is_finished():
+	if _current_question == null:
 		_end_session()
 		return
 
