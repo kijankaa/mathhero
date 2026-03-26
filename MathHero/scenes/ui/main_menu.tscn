@@ -59,12 +59,24 @@ layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_top = 128.0
-offset_bottom = 162.0
+offset_bottom = 152.0
 grow_horizontal = 2
 horizontal_alignment = 1
 text = "— ZOSTAŃ MISTRZEM MATEMATYKI —"
 theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.0, 0.90, 1.0, 0.70)
+
+[node name="AuthorLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 154.0
+offset_bottom = 174.0
+grow_horizontal = 2
+horizontal_alignment = 1
+text = "by Jarek Adamczyk"
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.65, 0.60, 0.80, 0.55)
 
 [node name="PlayButton" type="Button" parent="." unique_id=736328669]
 layout_mode = 1
