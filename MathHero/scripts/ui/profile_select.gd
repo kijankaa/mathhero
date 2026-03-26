@@ -28,7 +28,7 @@ func _load_and_display() -> void:
 
 func _add_profile_card(profile: PlayerProfile) -> void:
 	var btn := Button.new()
-	var avatar: String = Constants.AVATARS[profile.avatar_id] if profile.avatar_id < Constants.AVATARS.size() else "🚀"
+	var avatar: String = Constants.AVATARS[profile.avatar_id] if profile.avatar_id < Constants.AVATARS.size() else "?"
 	btn.text = avatar + "\n" + profile.name
 	btn.custom_minimum_size = Vector2(120, 120)
 	btn.pressed.connect(_on_profile_selected.bind(profile))

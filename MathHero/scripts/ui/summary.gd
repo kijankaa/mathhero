@@ -128,7 +128,7 @@ func _check_mission_completion(profile: PlayerProfile) -> void:
 			profile.stars += daily_reward
 			profile.stars_total_earned += daily_reward
 			EventBus.stars_earned.emit(daily_reward, profile.stars)
-			_mission_result_label.text = "☀️ Wyzwanie dnia ukończone! +%d⭐ (Seria: %d)" % [daily_reward, profile.daily_challenge_streak]
+			_mission_result_label.text = "Wyzwanie dnia ukończone! +%d★ (Seria: %d)" % [daily_reward, profile.daily_challenge_streak]
 			_mission_result_label.visible = true
 			# Sprawdź odznakę za wyzwanie
 			var daily_badges: Array[String] = RewardSystem.check_new_badges(profile, _result)
@@ -150,7 +150,7 @@ func _check_mission_completion(profile: PlayerProfile) -> void:
 		profile.stars_total_earned += reward
 		EventBus.mission_completed.emit(mission_id)
 		EventBus.stars_earned.emit(reward, profile.stars)
-		_mission_result_label.text = "✅ Misja ukończona! +%d⭐" % reward
+		_mission_result_label.text = "Misja ukończona! +%d★" % reward
 		_mission_result_label.visible = true
 		# Sprawdź nowe odznaki za misję
 		var new_mission_badges: Array[String] = RewardSystem.check_new_badges(profile, _result)
@@ -158,7 +158,7 @@ func _check_mission_completion(profile: PlayerProfile) -> void:
 			if not badge_id in profile.unlocked_badges:
 				profile.unlocked_badges.append(badge_id)
 	elif _result.get_accuracy() < req_acc:
-		_mission_result_label.text = "❌ Misja nieudana (%.0f%% / %.0f%% wymagane)" % [_result.get_accuracy() * 100.0, req_acc * 100.0]
+		_mission_result_label.text = "Misja nieudana (%.0f%% / %.0f%% wymagane)" % [_result.get_accuracy() * 100.0, req_acc * 100.0]
 		_mission_result_label.visible = true
 
 
@@ -171,7 +171,7 @@ func _update_ui() -> void:
 	_accuracy_label.text = "Dokładność: %d%%" % _result.get_accuracy_percent()
 
 	# Gwiazdki
-	var stars_text: String = "⭐".repeat(_stars_earned) if _stars_earned > 0 else "—"
+	var stars_text: String = "★".repeat(_stars_earned) if _stars_earned > 0 else "—"
 	_stars_earned_label.text = "Gwiazdki: %s" % stars_text
 
 	# Nowe odznaki
@@ -179,13 +179,13 @@ func _update_ui() -> void:
 		var badge_names: Array[String] = []
 		for badge_id: String in _new_badges:
 			var def: Dictionary = RewardSystem.BADGE_DEFINITIONS.get(badge_id, {})
-			badge_names.append(def.get("emoji", "🏅") + " " + def.get("name", badge_id))
+			badge_names.append(def.get("emoji", "★") + " " + def.get("name", badge_id))
 		_new_badges_label.text = "Nowe odznaki:\n" + "\n".join(badge_names)
 		_new_badges_label.visible = true
 
 	# Przycisk Pobij Rekord
 	if GameState.has_active_profile() and GameState.current_profile.best_session_score > 0:
-		_beat_record_button.text = "🏆 Pobij Rekord: %d" % GameState.current_profile.best_session_score
+		_beat_record_button.text = "Pobij Rekord: %d" % GameState.current_profile.best_session_score
 		_beat_record_button.visible = true
 
 	# Misja bonusowa (tylko jeśli nie byliśmy w misji)

@@ -7,51 +7,51 @@ extends Node
 
 const MISSIONS: Array[Dictionary] = [
 	{
-		"id": "prolog", "name": "Prolog", "emoji": "🌑",
+		"id": "prolog", "name": "Prolog", "emoji": "○",
 		"desc": "Pierwsze kroki", "op": "addition",
 		"min": 1, "max": 10, "count": 5, "req_acc": 0.7, "reward": 5,
 		"unlock_requires": ""
 	},
 	{
-		"id": "luna", "name": "Luna", "emoji": "🌕",
+		"id": "luna", "name": "Luna", "emoji": "●",
 		"desc": "Dodawanie do 50", "op": "addition",
 		"min": 1, "max": 50, "count": 10, "req_acc": 0.75, "reward": 8,
 		"unlock_requires": "prolog"
 	},
 	{
-		"id": "mars", "name": "Mars", "emoji": "🔴",
+		"id": "mars", "name": "Mars", "emoji": "◆",
 		"desc": "Odejmowanie", "op": "subtraction",
 		"min": 1, "max": 30, "count": 10, "req_acc": 0.75, "reward": 8,
 		"unlock_requires": "luna"
 	},
 	{
-		"id": "wenus", "name": "Wenus", "emoji": "⭐",
+		"id": "wenus", "name": "Wenus", "emoji": "★",
 		"desc": "Tabliczka mnożenia", "op": "multiplication",
 		"min": 1, "max": 10, "count": 10, "req_acc": 0.7, "reward": 10,
 		"unlock_requires": "mars"
 	},
 	{
-		"id": "jowisz", "name": "Jowisz", "emoji": "🟠",
+		"id": "jowisz", "name": "Jowisz", "emoji": "◉",
 		"desc": "Dzielenie", "op": "division",
 		"min": 1, "max": 10, "count": 10, "req_acc": 0.7, "reward": 10,
 		"unlock_requires": "wenus"
 	},
 	{
-		"id": "saturn", "name": "Saturn", "emoji": "💫",
+		"id": "saturn", "name": "Saturn", "emoji": "✦",
 		"desc": "Dodawanie i odejmowanie", "op": "mixed",
 		"mixed": ["addition", "subtraction"],
 		"min": 1, "max": 50, "count": 15, "req_acc": 0.8, "reward": 15,
 		"unlock_requires": "jowisz"
 	},
 	{
-		"id": "neptun", "name": "Neptun", "emoji": "🌀",
+		"id": "neptun", "name": "Neptun", "emoji": "◎",
 		"desc": "Mnożenie i dzielenie", "op": "mixed",
 		"mixed": ["multiplication", "division"],
 		"min": 1, "max": 12, "count": 15, "req_acc": 0.8, "reward": 15,
 		"unlock_requires": "saturn"
 	},
 	{
-		"id": "kosmos", "name": "Kosmos", "emoji": "🌌",
+		"id": "kosmos", "name": "Kosmos", "emoji": "■",
 		"desc": "Wszystkie działania", "op": "mixed",
 		"mixed": ["addition", "subtraction", "multiplication", "division"],
 		"min": 1, "max": 20, "count": 20, "req_acc": 0.85, "reward": 25,

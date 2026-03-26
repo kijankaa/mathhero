@@ -88,7 +88,7 @@ func _load_profile_config() -> void:
 		return
 
 	var p := GameState.current_profile
-	var avatar: String = Constants.AVATARS[p.avatar_id] if p.avatar_id < Constants.AVATARS.size() else "🚀"
+	var avatar: String = Constants.AVATARS[p.avatar_id] if p.avatar_id < Constants.AVATARS.size() else "?"
 	_profile_label.text = avatar + "  " + p.name
 
 	var config: SessionConfig

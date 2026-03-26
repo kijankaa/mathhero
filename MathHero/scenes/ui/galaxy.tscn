@@ -37,7 +37,7 @@ offset_top = 10.0
 offset_bottom = 50.0
 grow_horizontal = 2
 horizontal_alignment = 1
-text = "🌌 Galaktyka Misji"
+text = "Galaktyka Misji"
 theme_override_font_sizes/font_size = 28
 
 [node name="DailyPanel" type="PanelContainer" parent="."]
@@ -60,7 +60,7 @@ layout_mode = 2
 [node name="DailyTitleLabel" type="Label" parent="DailyPanel/VBox"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "☀️ Wyzwanie Dnia"
+text = "Wyzwanie Dnia"
 theme_override_font_sizes/font_size = 22
 
 [node name="DailyDescLabel" type="Label" parent="DailyPanel/VBox"]

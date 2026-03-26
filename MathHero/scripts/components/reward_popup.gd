@@ -25,7 +25,7 @@ func show_rewards(stars: int, new_badges: Array[String]) -> void:
 			suffix = "gwiazdki!"
 		else:
 			suffix = "gwiazdek!"
-		_stars_label.text = "⭐ +%d %s" % [stars, suffix]
+		_stars_label.text = "★ +%d %s" % [stars, suffix]
 	else:
 		_stars_label.text = ""
 
@@ -34,7 +34,7 @@ func show_rewards(stars: int, new_badges: Array[String]) -> void:
 		var lines: Array[String] = []
 		for badge_id: String in new_badges:
 			var def: Dictionary = RewardSystem.BADGE_DEFINITIONS.get(badge_id, {})
-			lines.append(def.get("emoji", "🏅") + " " + def.get("name", badge_id))
+			lines.append(def.get("emoji", "★") + " " + def.get("name", badge_id))
 		_badges_label.text = "Nowa odznaka!\n" + "\n".join(lines)
 	else:
 		_badges_label.text = ""

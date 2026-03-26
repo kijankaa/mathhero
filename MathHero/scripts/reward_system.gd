@@ -15,18 +15,18 @@ const LEVEL_NAMES: Array[String] = [
 # cost: gwiazdki, level_req: minimalny poziom bohatera
 
 const SHOP_ITEMS: Dictionary = {
-	"helmet_1":  {"name": "Hełm Bazowy",        "slot": "helmet",   "cost": 0,  "emoji": "⛑️", "level_req": 0},
-	"helmet_2":  {"name": "Hełm Kosmiczny",     "slot": "helmet",   "cost": 10, "emoji": "🪖", "level_req": 1},
-	"helmet_3":  {"name": "Hełm Złoty",         "slot": "helmet",   "cost": 30, "emoji": "👑", "level_req": 3},
-	"suit_1":    {"name": "Skafander Biały",    "slot": "suit",     "cost": 0,  "emoji": "🥼", "level_req": 0},
-	"suit_2":    {"name": "Skafander Niebieski","slot": "suit",     "cost": 15, "emoji": "🔵", "level_req": 1},
-	"suit_3":    {"name": "Skafander Złoty",    "slot": "suit",     "cost": 40, "emoji": "✨", "level_req": 3},
-	"backpack_1":{"name": "Plecak Standardowy", "slot": "backpack", "cost": 0,  "emoji": "🎒", "level_req": 0},
-	"backpack_2":{"name": "Plecak Rakietowy",   "slot": "backpack", "cost": 20, "emoji": "🚀", "level_req": 2},
-	"boots_1":   {"name": "Buty Bazowe",        "slot": "boots",    "cost": 0,  "emoji": "👟", "level_req": 0},
-	"boots_2":   {"name": "Buty Kosmiczne",     "slot": "boots",    "cost": 15, "emoji": "🥾", "level_req": 1},
-	"gloves_1":  {"name": "Rękawice Bazowe",    "slot": "gloves",   "cost": 0,  "emoji": "🧤", "level_req": 0},
-	"gloves_2":  {"name": "Rękawice Złote",     "slot": "gloves",   "cost": 25, "emoji": "🌟", "level_req": 2},
+	"helmet_1":  {"name": "Hełm Bazowy",        "slot": "helmet",   "cost": 0,  "emoji": "[H]", "level_req": 0},
+	"helmet_2":  {"name": "Hełm Kosmiczny",     "slot": "helmet",   "cost": 10, "emoji": "[H+]","level_req": 1},
+	"helmet_3":  {"name": "Hełm Złoty",         "slot": "helmet",   "cost": 30, "emoji": "[H★]","level_req": 3},
+	"suit_1":    {"name": "Skafander Biały",    "slot": "suit",     "cost": 0,  "emoji": "[S]", "level_req": 0},
+	"suit_2":    {"name": "Skafander Niebieski","slot": "suit",     "cost": 15, "emoji": "[S+]","level_req": 1},
+	"suit_3":    {"name": "Skafander Złoty",    "slot": "suit",     "cost": 40, "emoji": "[S★]","level_req": 3},
+	"backpack_1":{"name": "Plecak Standardowy", "slot": "backpack", "cost": 0,  "emoji": "[P]", "level_req": 0},
+	"backpack_2":{"name": "Plecak Rakietowy",   "slot": "backpack", "cost": 20, "emoji": "[P+]","level_req": 2},
+	"boots_1":   {"name": "Buty Bazowe",        "slot": "boots",    "cost": 0,  "emoji": "[B]", "level_req": 0},
+	"boots_2":   {"name": "Buty Kosmiczne",     "slot": "boots",    "cost": 15, "emoji": "[B+]","level_req": 1},
+	"gloves_1":  {"name": "Rękawice Bazowe",    "slot": "gloves",   "cost": 0,  "emoji": "[R]", "level_req": 0},
+	"gloves_2":  {"name": "Rękawice Złote",     "slot": "gloves",   "cost": 25, "emoji": "[R★]","level_req": 2},
 }
 
 # Domyślny kostium (darmowe itemy — przydzielane przy tworzeniu profilu)
@@ -38,21 +38,21 @@ const DEFAULT_COSTUME: Dictionary = {
 # ─── Odznaki ──────────────────────────────────────────────────────────────────
 
 const BADGE_DEFINITIONS: Dictionary = {
-	"first_session":    {"name": "Pierwszy Krok",    "desc": "Ukończ pierwszą sesję",              "emoji": "🚀"},
-	"sessions_10":      {"name": "Regularny",         "desc": "Ukończ 10 sesji",                    "emoji": "📅"},
-	"sessions_50":      {"name": "Weteran",           "desc": "Ukończ 50 sesji",                    "emoji": "🏅"},
-	"sessions_100":     {"name": "Legenda",           "desc": "Ukończ 100 sesji",                   "emoji": "🏆"},
-	"streak_5":         {"name": "Seria 5",           "desc": "Seria 5 poprawnych w jednej sesji",  "emoji": "🔥"},
-	"streak_10":        {"name": "Seria 10",          "desc": "Seria 10 poprawnych w jednej sesji", "emoji": "⚡"},
-	"streak_20":        {"name": "Seria 20",          "desc": "Seria 20 poprawnych w jednej sesji", "emoji": "💥"},
-	"perfect_score":    {"name": "Perfekcja",         "desc": "100% dokładność w sesji",            "emoji": "💯"},
-	"correct_100":      {"name": "Sto Odpowiedzi",    "desc": "100 poprawnych odpowiedzi łącznie",  "emoji": "💪"},
-	"correct_1000":     {"name": "Tysiąc Odpowiedzi", "desc": "1000 poprawnych odpowiedzi łącznie", "emoji": "🌟"},
-	"level_kosmonauta": {"name": "Awans: Kosmonauta", "desc": "Osiągnij poziom Kosmonauty",         "emoji": "👨‍🚀"},
-	"level_mathhero":   {"name": "MathHero!",         "desc": "Osiągnij poziom MathHero",           "emoji": "🦸"},
-	"daily_challenge":  {"name": "Wyzwanie Dnia",     "desc": "Ukończ codzienne wyzwanie",          "emoji": "☀️"},
-	"mission_complete": {"name": "Misjonarz",          "desc": "Ukończ pierwszą misję galaktyki",    "emoji": "🚀"},
-	"mission_all":      {"name": "Zdobywca Galaktyki", "desc": "Ukończ wszystkie 8 misji",           "emoji": "🌌"},
+	"first_session":    {"name": "Pierwszy Krok",    "desc": "Ukończ pierwszą sesję",              "emoji": "1"},
+	"sessions_10":      {"name": "Regularny",         "desc": "Ukończ 10 sesji",                    "emoji": "10"},
+	"sessions_50":      {"name": "Weteran",           "desc": "Ukończ 50 sesji",                    "emoji": "50"},
+	"sessions_100":     {"name": "Legenda",           "desc": "Ukończ 100 sesji",                   "emoji": "100"},
+	"streak_5":         {"name": "Seria 5",           "desc": "Seria 5 poprawnych w jednej sesji",  "emoji": "x5"},
+	"streak_10":        {"name": "Seria 10",          "desc": "Seria 10 poprawnych w jednej sesji", "emoji": "x10"},
+	"streak_20":        {"name": "Seria 20",          "desc": "Seria 20 poprawnych w jednej sesji", "emoji": "x20"},
+	"perfect_score":    {"name": "Perfekcja",         "desc": "100% dokładność w sesji",            "emoji": "100%"},
+	"correct_100":      {"name": "Sto Odpowiedzi",    "desc": "100 poprawnych odpowiedzi łącznie",  "emoji": "100"},
+	"correct_1000":     {"name": "Tysiąc Odpowiedzi", "desc": "1000 poprawnych odpowiedzi łącznie", "emoji": "1k"},
+	"level_kosmonauta": {"name": "Awans: Kosmonauta", "desc": "Osiągnij poziom Kosmonauty",         "emoji": "LVL"},
+	"level_mathhero":   {"name": "MathHero!",         "desc": "Osiągnij poziom MathHero",           "emoji": "★★"},
+	"daily_challenge":  {"name": "Wyzwanie Dnia",     "desc": "Ukończ codzienne wyzwanie",          "emoji": "DAY"},
+	"mission_complete": {"name": "Misjonarz",          "desc": "Ukończ pierwszą misję galaktyki",    "emoji": "M1"},
+	"mission_all":      {"name": "Zdobywca Galaktyki", "desc": "Ukończ wszystkie 8 misji",           "emoji": "M8"},
 }
 
 # ─── Gwiazdki ─────────────────────────────────────────────────────────────────

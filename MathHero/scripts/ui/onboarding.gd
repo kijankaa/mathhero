@@ -10,19 +10,19 @@ extends Control
 
 const SLIDES: Array[Dictionary] = [
 	{
-		"title": "Witaj w MathHero! 🚀",
+		"title": "Witaj w MathHero!",
 		"text": "Ćwicz matematykę w kosmicznej przygodzie.\nZdobywaj gwiazdki i odblokuj planety!",
 	},
 	{
-		"title": "Jak grać? 🧮",
+		"title": "Jak grać?",
 		"text": "Zobaczysz zadanie matematyczne.\nWpisz odpowiedź klawiaturą lub wybierz spośród opcji.\nCzym szybciej — tym więcej punktów!",
 	},
 	{
-		"title": "Nagrody i postępy ⭐",
+		"title": "Nagrody i postępy",
 		"text": "Za każdą sesję zdobywasz gwiazdki.\nKupuj kostiumy dla astronauty\ni zdobywaj odznaki za osiągnięcia!",
 	},
 	{
-		"title": "Galaktyka Misji 🌌",
+		"title": "Galaktyka Misji",
 		"text": "Ukończaj misje planetarne w odpowiedniej kolejności.\nCodziennie czeka na Ciebie wyzwanie dnia!\nPowodzenia, MathHero!",
 	},
 ]
@@ -43,7 +43,7 @@ func _show_slide(index: int) -> void:
 	var slide: Dictionary = SLIDES[index]
 	_title_label.text = slide["title"]
 	_slide_label.text = slide["text"]
-	_next_button.text = "Dalej →" if index < SLIDES.size() - 1 else "Zaczynamy! 🚀"
+	_next_button.text = "Dalej →" if index < SLIDES.size() - 1 else "Zaczynamy!"
 	_update_dots()
 
 

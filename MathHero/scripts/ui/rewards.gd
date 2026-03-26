@@ -48,7 +48,7 @@ func _refresh_hero_tab() -> void:
 
 	var progress: Dictionary = RewardSystem.get_level_progress(profile.stars_total_earned)
 	_hero_level_label.text = "Poziom %d: %s" % [progress.level, progress.name]
-	_stars_label.text = "⭐ %d gwiazdek" % profile.stars
+	_stars_label.text = "★ %d gwiazdek" % profile.stars
 
 	if progress.is_max:
 		_progress_bar.value = 1.0
@@ -64,7 +64,7 @@ func _build_shop_tab() -> void:
 		child.queue_free()
 
 	var profile: PlayerProfile = GameState.current_profile
-	_shop_stars_label.text = "Masz: ⭐ %d" % profile.stars
+	_shop_stars_label.text = "Masz: ★ %d" % profile.stars
 
 	var hero_level: int = RewardSystem.get_hero_level(profile.stars_total_earned)
 
@@ -102,19 +102,19 @@ func _build_shop_item(item: Dictionary, profile: PlayerProfile, hero_level: int)
 	action_btn.custom_minimum_size = Vector2(160, 44)
 
 	if equipped:
-		action_btn.text = "✅ Ubrane"
+		action_btn.text = "Ubrane"
 		action_btn.disabled = true
 	elif owned:
 		action_btn.text = "Ubierz"
 		action_btn.pressed.connect(_on_equip_pressed.bind(item_id, slot))
 	elif not level_ok:
-		action_btn.text = "Poziom %d ❌" % level_req
+		action_btn.text = "Poziom %d wymagany" % level_req
 		action_btn.disabled = true
 	elif can_afford:
-		action_btn.text = "Kup ⭐%d" % cost
+		action_btn.text = "Kup ★%d" % cost
 		action_btn.pressed.connect(_on_buy_pressed.bind(item_id, cost))
 	else:
-		action_btn.text = "Za mało ⭐"
+		action_btn.text = "Za mało ★"
 		action_btn.disabled = true
 
 	row.add_child(emoji_lbl)
@@ -170,7 +170,7 @@ func _build_badges_tab() -> void:
 		panel.custom_minimum_size = Vector2(140, 100)
 
 		var emoji_lbl := Label.new()
-		emoji_lbl.text = def.get("emoji", "🏅")
+		emoji_lbl.text = def.get("emoji", "★")
 		emoji_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		emoji_lbl.add_theme_font_size_override("font_size", 32)
 

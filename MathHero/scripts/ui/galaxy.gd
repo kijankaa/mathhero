@@ -55,7 +55,7 @@ func _build_planet_row(mission: Dictionary, profile: PlayerProfile) -> void:
 	row.custom_minimum_size = Vector2(0, 60)
 
 	var emoji_lbl := Label.new()
-	emoji_lbl.text = mission.get("emoji", "🌑")
+	emoji_lbl.text = mission.get("emoji", "○")
 	emoji_lbl.custom_minimum_size = Vector2(60, 0)
 	emoji_lbl.add_theme_font_size_override("font_size", 32)
 
@@ -67,7 +67,7 @@ func _build_planet_row(mission: Dictionary, profile: PlayerProfile) -> void:
 	name_lbl.add_theme_font_size_override("font_size", 18)
 
 	var req_lbl := Label.new()
-	req_lbl.text = "%d pytań | %.0f%% wymagane | +%d⭐" % [
+	req_lbl.text = "%d pytań | %.0f%% wymagane | +%d★" % [
 		mission.get("count", 10),
 		mission.get("req_acc", 0.7) * 100.0,
 		mission.get("reward", 0)
@@ -81,13 +81,13 @@ func _build_planet_row(mission: Dictionary, profile: PlayerProfile) -> void:
 	action_btn.custom_minimum_size = Vector2(140, 50)
 
 	if completed:
-		action_btn.text = "✅ Ukończona"
+		action_btn.text = "Ukończona"
 		action_btn.disabled = true
 	elif unlocked:
-		action_btn.text = "🚀 Graj!"
+		action_btn.text = "Graj!"
 		action_btn.pressed.connect(_on_mission_start.bind(mission_id))
 	else:
-		action_btn.text = "🔒 Zablokowana"
+		action_btn.text = "Zablokowana"
 		action_btn.disabled = true
 
 	row.add_child(emoji_lbl)

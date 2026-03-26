@@ -51,7 +51,7 @@ theme_override_font_sizes/font_size = 24
 [node name="StarsLabel" type="Label" parent="TabContainer/Bohater"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "⭐ 0 gwiazdek"
+text = "★ 0 gwiazdek"
 theme_override_font_sizes/font_size = 20
 
 [node name="ProgressBar" type="ProgressBar" parent="TabContainer/Bohater"]
@@ -74,7 +74,7 @@ layout_mode = 2
 
 [node name="CurrentStarsLabel" type="Label" parent="TabContainer/Sklep"]
 layout_mode = 2
-text = "Masz: ⭐ 0"
+text = "Masz: ★ 0"
 theme_override_font_sizes/font_size = 20
 
 [node name="ScrollContainer" type="ScrollContainer" parent="TabContainer/Sklep"]

@@ -63,7 +63,7 @@ const OP_DEFAULT_RANGES: Dictionary = {
 }
 
 # Avatary profilu
-const AVATARS: Array[String] = ["🚀", "🌟", "👾", "🤖", "🦊", "🐉", "🎯", "⚡"]
+const AVATARS: Array[String] = ["A", "B", "C", "D", "E", "F", "G", "H"]
 
 # Walidacja konfiguracji sesji
 const CONFIG_MIN_VALUE_MIN: int = 1
