@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://neon_panel_comp"]
+
+[ext_resource type="Script" path="res://scripts/components/neon_panel.gd" id="1_npanel"]
+
+[node name="NeonPanel" type="Control"]
+script = ExtResource("1_npanel")
