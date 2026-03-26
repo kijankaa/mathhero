@@ -5,10 +5,12 @@ extends Control
 @onready var _rewards_button: Button = $RewardsButton
 @onready var _galaxy_button: Button = $GalaxyButton
 @onready var _stats_button: Button = $StatsButton
+@onready var _config_button: Button = $ConfigButton
 
 
 func _ready() -> void:
 	_play_button.pressed.connect(_on_play_pressed)
+	_config_button.pressed.connect(func() -> void: SceneManager.go_to(Constants.SCENE_CONFIG))
 	_rewards_button.pressed.connect(_on_rewards_pressed)
 	_galaxy_button.pressed.connect(func() -> void: SceneManager.go_to(Constants.SCENE_GALAXY))
 	_stats_button.pressed.connect(func() -> void: SceneManager.go_to(Constants.SCENE_STATS))
