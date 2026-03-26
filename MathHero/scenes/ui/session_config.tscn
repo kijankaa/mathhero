@@ -15,12 +15,21 @@ script = ExtResource("1_sescfg")
 [node name="SpaceBackground" parent="." instance=ExtResource("93_spacebg")]
 layout_mode = 1
 
+[node name="BackButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 160.0
+offset_bottom = 50.0
+text = "← Wstecz"
+
 [node name="ProfileLabel" type="Label" parent="."]
 layout_mode = 1
 anchors_preset = 0
-offset_left = 20.0
+offset_left = 180.0
 offset_top = 15.0
-offset_right = 300.0
+offset_right = 700.0
 offset_bottom = 45.0
 text = ""
 

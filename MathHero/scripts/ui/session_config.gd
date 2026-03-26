@@ -41,11 +41,13 @@ const _OP_INDEX_MAP: Array[String] = [
 @onready var _play_button: Button = $PlayButton
 @onready var _save_preset_button: Button = $SavePresetButton
 @onready var _error_label: Label = $ErrorLabel
+@onready var _back_button: Button = $BackButton
 
 
 func _ready() -> void:
 	_play_button.pressed.connect(_on_play_pressed)
 	_save_preset_button.pressed.connect(_on_save_preset_pressed)
+	_back_button.pressed.connect(func() -> void: SceneManager.go_to(Constants.SCENE_MAIN_MENU))
 	_time_limit_toggle.toggled.connect(_on_time_limit_toggled)
 
 	_operation_button.add_item("Dodawanie")
