@@ -3,7 +3,6 @@
 *.uid
 
 # Godot export (HTML5 build output)
-docs/
 
 # BMAD framework (duży, regenerowalny)
 _bmad/
