@@ -4,40 +4,6 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
 		<title>MathHero</title>
-		<!-- PWA -->
-		<link rel="manifest" href="manifest.json">
-		<meta name="apple-mobile-web-app-capable" content="yes">
-		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-		<meta name="apple-mobile-web-app-title" content="MathHero">
-		<link rel="apple-touch-icon" href="icons/icon-192.png">
-		<script>
-		  if ('serviceWorker' in navigator) {
-		    window.addEventListener('load', () => {
-		      navigator.serviceWorker.register('./service_worker.js')
-		        .then(reg => console.log('[SW] Zarejestrowany:', reg.scope))
-		        .catch(err => console.error('[SW] Błąd rejestracji:', err));
-		    });
-		  }
-		</script>
-		<!-- Landscape lock -->
-		<style>
-		  @media (orientation: portrait) {
-		    body::before {
-		      content: "Obróć urządzenie poziomo";
-		      display: flex;
-		      justify-content: center;
-		      align-items: center;
-		      position: fixed;
-		      inset: 0;
-		      background: #0a0a2e;
-		      color: #ffffff;
-		      font-size: 24px;
-		      font-family: sans-serif;
-		      z-index: 9999;
-		    }
-		    canvas { display: none; }
-		  }
-		</style>
 		<style>
 html, body, #canvas {
 	margin: 0;
@@ -145,7 +111,7 @@ body {
 
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":19796,"index.wasm":35739700},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":6421468,"index.wasm":37685705},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
