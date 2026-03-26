@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>MathHero — Selenia (mockup)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #020b18; display: flex; justify-content: center;
+           align-items: center; height: 100vh; overflow: hidden; }
+    #fl { font-family: 'Fredoka One'; position: fixed; top: -200px; }
+  </style>
+</head>
+<body>
+<div id="fl">.</div>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+<script>
+// ─── Konfiguracja świata ────────────────────────────────────────────────────
+const VW = 768, VH = 1024;   // viewport (ekran)
+const WH = 2800;              // wysokość świata (scrollowana)
+
+// Węzły ścieżki — od dołu (start) do góry (meta)
+// format: [x, y, typ, etykieta]
+const NODES = [
+  [384, 2580, 'start',   'START'],
+  [220, 2340, 'math',    '2 + 3 = ?'],
+  [520, 2100, 'chest',   'SKARB'],
+  [260, 1860, 'math',    '7 + 5 = ?'],
+  [480, 1620, 'npc',     'SPOTKANIE'],
+  [200, 1380, 'math',    '9 + 6 = ?'],
+  [500, 1140, 'boss',    'BOSS'],
+  [300, 900,  'math',    '8 + 4 = ?'],
+  [440, 660,  'chest',   'SKARB'],
+  [384, 400,  'finish',  'KONIEC'],
+];
+
+const NODE_COLORS = {
+  start:  0x4ecdc4, math: 0x7c4dff, chest: 0xffd54f,
+  npc:    0x66bb6a, boss: 0xff4444, finish: 0xffe66d,
+};
+
+const NODE_ICONS = {
+  start: '▶', math: '?', chest: '★', npc: '!', boss: '☠', finish: '✦',
+};
+
+// ─── Scena planety ──────────────────────────────────────────────────────────
+class PlanetScene extends Phaser.Scene {
+  constructor() { super('Planet'); }
+
+  preload() {
+    this.load.image('bg',        'selenia_bg.jpg');
+    this.load.image('crystal',   'crystal.png');
+    this.load.image('astronaut', 'astronaut.jpg');
+  }
+
+  create() {
+    this._currentNode = 0;
+    this._moving = false;
+
+    this._setupWorld();
+    this._drawBgTiles();
+    this._drawAtmosphere();
+    this._placeDecorations();
+    this._drawPath();
+    this._drawNodes();
+    this._createPlayer();
+    this._createHUD();
+    this._setupCamera();
+    this._particles();
+
+    // Kamera startuje na węźle 0 (dół)
+    this._snapCameraToNode(0, true);
+  }
+
+  // ── Świat ─────────────────────────────────────────────────────────────────
+  _setupWorld() {
+    this.cameras.main.setBounds(0, 0, VW, WH);
+  }
+
+  // ── Tło — kafelkowane w pionie ────────────────────────────────────────────
+  _drawBgTiles() {
+    const tex = this.textures.get('bg');
+    const th  = tex.getSourceImage().height;
+    const tw  = tex.getSourceImage().width;
+    const cols = Math.ceil(VW / tw) + 1;
+    const rows = Math.ceil(WH / th) + 1;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const img = this.add.image(c * tw + tw / 2, r * th + th / 2, 'bg');
+        img.setDisplaySize(VW, Math.ceil(WH / rows));
+      }
+    }
+
+    // Ciemna nakładka dla głębi
+    const ov = this.add.graphics();
+    ov.fillStyle(0x000510, 0.55);
+    ov.fillRect(0, 0, VW, WH);
+  }
+
+  // ── Atmosfera — mgła ──────────────────────────────────────────────────────
+  _drawAtmosphere() {
+    for (let i = 0; i < 18; i++) {
+      const x = Math.random() * VW;
+      const y = Math.random() * WH;
+      const r = 80 + Math.random() * 200;
+      const g = this.add.graphics();
+      g.fillStyle(0x0a3060, 0.06 + Math.random() * 0.06);
+      g.fillCircle(x, y, r);
+      this.tweens.add({
+        targets: g, x: x + (Math.random() - 0.5) * 60,
+        duration: 5000 + Math.random() * 5000,
+        yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        delay: Math.random() * 4000
+      });
+    }
+  }
+
+  // ── Dekoracje — kryształy i kamienie ─────────────────────────────────────
+  _placeDecorations() {
+    // Duże kryształy
+    const bigPositions = [
+      [80, 400], [650, 550], [100, 950], [680, 1100],
+      [60, 1500], [700, 1700], [120, 2100], [660, 2300],
+      [300, 750], [500, 1900],
+    ];
+    bigPositions.forEach(([x, y]) => {
+      const sc  = 0.12 + Math.random() * 0.1;
+      const img = this.add.image(x, y, 'crystal')
+        .setScale(sc)
+        .setAlpha(0.85 + Math.random() * 0.15);
+
+      // Pulsowanie kryształu
+      this.tweens.add({
+        targets: img, alpha: 0.4 + Math.random() * 0.2,
+        duration: 1800 + Math.random() * 1200,
+        yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        delay: Math.random() * 2000
+      });
+
+      // Efekt świetlny pod kryształem
+      const glow = this.add.graphics();
+      glow.fillStyle(0x00e5ff, 0.12);
+      glow.fillEllipse(x, y + 20 * sc * 5, 80 * sc * 5, 20 * sc * 5);
+      this.tweens.add({
+        targets: glow, alpha: 0.04,
+        duration: 1800 + Math.random() * 1200,
+        yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        delay: Math.random() * 2000
+      });
+    });
+
+    // Małe kryształy
+    for (let i = 0; i < 25; i++) {
+      const x = 30 + Math.random() * (VW - 60);
+      const y = 200 + Math.random() * (WH - 400);
+      this.add.image(x, y, 'crystal')
+        .setScale(0.04 + Math.random() * 0.05)
+        .setAlpha(0.5 + Math.random() * 0.3);
+    }
+
+    // Gwiazdy w tle
+    for (let i = 0; i < 200; i++) {
+      const x = Math.random() * VW;
+      const y = Math.random() * WH;
+      const g = this.add.graphics();
+      g.fillStyle(0xffffff, 0.3 + Math.random() * 0.5);
+      g.fillCircle(x, y, 0.5 + Math.random() * 1.5);
+      if (Math.random() < 0.3) {
+        this.tweens.add({
+          targets: g, alpha: 0.05,
+          duration: 600 + Math.random() * 2000,
+          yoyo: true, repeat: -1, delay: Math.random() * 3000
+        });
+      }
+    }
+  }
+
+  // ── Ścieżka ───────────────────────────────────────────────────────────────
+  _drawPath() {
+    const graphics = this.add.graphics();
+
+    // Cień ścieżki
+    graphics.lineStyle(18, 0x000000, 0.5);
+    this._strokePath(graphics, 3);
+
+    // Główna linia ścieżki
+    graphics.lineStyle(10, 0x1a4080, 0.9);
+    this._strokePath(graphics, 0);
+
+    // Świecąca linia (ukończone + bieżący)
+    const glowPath = this.add.graphics();
+    glowPath.lineStyle(5, 0x4ecdc4, 0.8);
+    this._strokePathUpTo(glowPath, this._currentNode);
+    this._glowPath = glowPath;
+
+    // Wzór — przerywane znaczniki na ścieżce
+    for (let i = 0; i < NODES.length - 1; i++) {
+      const [x1, y1] = NODES[i];
+      const [x2, y2] = NODES[i + 1];
+      for (let t = 0.2; t < 0.9; t += 0.2) {
+        const x = x1 + (x2 - x1) * t + (Math.sin(t * 8) * 25);
+        const y = y1 + (y2 - y1) * t;
+        const d = this.add.graphics();
+        d.fillStyle(0x2a6090, 0.6);
+        d.fillCircle(x, y, 3);
+      }
+    }
+  }
+
+  _strokePath(g, offsetX) {
+    g.beginPath();
+    NODES.forEach(([x, y], i) => {
+      if (i === 0) { g.moveTo(x + offsetX, y); return; }
+      const [px, py] = NODES[i - 1];
+      const mx = (px + x) / 2 + (Math.random() - 0.5) * 60;
+      const my = (py + y) / 2;
+      g.lineTo(mx + offsetX, my);
+      g.lineTo(x + offsetX, y);
+    });
+    g.strokePath();
+  }
+
+  _strokePathUpTo(g, nodeIdx) {
+    g.beginPath();
+    for (let i = 0; i <= Math.min(nodeIdx, NODES.length - 1); i++) {
+      const [x, y] = NODES[i];
+      if (i === 0) { g.moveTo(x, y); continue; }
+      g.lineTo(x, y);
+    }
+    g.strokePath();
+  }
+
+  // ── Węzły ─────────────────────────────────────────────────────────────────
+  _drawNodes() {
+    this._nodeObjects = [];
+
+    NODES.forEach(([x, y, type, label], i) => {
+      const col   = NODE_COLORS[type];
+      const icon  = NODE_ICONS[type];
+      const done  = i < this._currentNode;
+      const cur   = i === this._currentNode;
+      const locked = i > this._currentNode;
+
+      const container = this.add.container(x, y);
+
+      // Cień
+      const sh = this.add.graphics();
+      sh.fillStyle(0x000000, 0.4);
+      sh.fillCircle(3, 5, cur ? 36 : 28);
+
+      // Pierścień zewnętrzny
+      const ring = this.add.graphics();
+      ring.lineStyle(cur ? 5 : 3, col, locked ? 0.3 : 1);
+      ring.strokeCircle(0, 0, cur ? 36 : 28);
+
+      // Wypełnienie
+      const bg = this.add.graphics();
+      bg.fillStyle(done ? col : (locked ? 0x1a2a40 : col), locked ? 1 : 0.9);
+      bg.fillCircle(0, 0, cur ? 32 : 24);
+      if (done) {
+        bg.fillStyle(0xffffff, 0.2);
+        bg.fillCircle(-6, -6, 10);
+      }
+
+      // Ikona
+      const ico = this.add.text(0, 1, icon, {
+        fontFamily: 'Fredoka One',
+        fontSize: cur ? '22px' : '18px',
+        color: locked ? '#334466' : '#ffffff',
+        stroke: '#000000', strokeThickness: 2,
+      }).setOrigin(0.5);
+
+      // Etykieta (typ węzła)
+      const typLabel = this.add.text(0, cur ? 46 : 36, label, {
+        fontFamily: 'Fredoka One',
+        fontSize: '13px',
+        color: locked ? '#334466' : '#a0d8ef',
+        stroke: '#000000', strokeThickness: 3,
+      }).setOrigin(0.5);
+
+      container.add([sh, ring, bg, ico, typLabel]);
+
+      // Pulsowanie bieżącego węzła
+      if (cur) {
+        this.tweens.add({
+          targets: container, scaleX: 1.12, scaleY: 1.12,
+          duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+        });
+
+        // Glow wokół aktywnego węzła
+        const gl = this.add.graphics();
+        gl.fillStyle(col, 0.15);
+        gl.fillCircle(x, y, 60);
+        this.tweens.add({
+          targets: gl, alpha: 0.03,
+          duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+        });
+      }
+
+      // Klik (tylko odblokowane lub bieżący)
+      if (!locked) {
+        container.setSize(80, 80);
+        container.setInteractive({ cursor: 'pointer' });
+        container.on('pointerdown', () => this._onNodeTap(i));
+        container.on('pointerover', () => {
+          if (!cur) this.tweens.add({ targets: container, scaleX: 1.1, scaleY: 1.1, duration: 120 });
+        });
+        container.on('pointerout', () => {
+          if (!cur) this.tweens.add({ targets: container, scaleX: 1, scaleY: 1, duration: 120 });
+        });
+      }
+
+      this._nodeObjects.push(container);
+    });
+  }
+
+  // ── Postać gracza ─────────────────────────────────────────────────────────
+  _createPlayer() {
+    const [x, y] = NODES[0];
+    this._player = this.add.container(x, y - 50);
+
+    // Koło pod postacią (cień)
+    const shadow = this.add.graphics();
+    shadow.fillStyle(0x000000, 0.35);
+    shadow.fillEllipse(0, 28, 52, 14);
+
+    // Astronauta (okrągły kadr)
+    const mask  = this.make.graphics({ add: false });
+    mask.fillStyle(0xffffff);
+    mask.fillCircle(x, y - 50, 24);
+    const astro = this.add.image(0, 0, 'astronaut')
+      .setDisplaySize(48, 48);
+
+    // Ramka wokół postaci
+    const frame = this.add.graphics();
+    frame.lineStyle(3, 0x4ecdc4, 1);
+    frame.strokeCircle(0, 0, 26);
+    frame.fillStyle(0x4ecdc4, 0.2);
+    frame.fillCircle(0, 0, 26);
+
+    // Wskaźnik (strzałka w górę)
+    const arrow = this.add.text(0, -42, '▲', {
+      fontFamily: 'Fredoka One', fontSize: '16px', color: '#ffe66d',
+      stroke: '#000', strokeThickness: 3
+    }).setOrigin(0.5);
+
+    this._player.add([shadow, astro, frame, arrow]);
+
+    // Idle bob
+    this.tweens.add({
+      targets: this._player, y: (NODES[0][1] - 50) - 8,
+      duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+    });
+  }
+
+  // ── HUD ───────────────────────────────────────────────────────────────────
+  _createHUD() {
+    // Kontener HUD jest fixed — nie scrolluje razem ze światem
+    const hudCam = this.cameras.add(0, 0, VW, VH);
+    hudCam.setScroll(0, 0);
+
+    // Panel górny
+    const topBar = this.add.graphics();
+    topBar.fillStyle(0x050d1a, 0.92);
+    topBar.fillRect(0, 0, VW, 70);
+    topBar.lineStyle(2, 0x1a4080, 1);
+    topBar.lineBetween(0, 70, VW, 70);
+    topBar.setScrollFactor(0);
+
+    // Nazwa planety
+    this.add.text(VW / 2, 35, '❄  SELENIA', {
+      fontFamily: 'Fredoka One', fontSize: '28px',
+      color: '#4ecdc4', stroke: '#000', strokeThickness: 3
+    }).setOrigin(0.5).setScrollFactor(0);
+
+    // Przycisk powrotu
+    const backBtn = this.add.text(30, 35, '← Mapa', {
+      fontFamily: 'Fredoka One', fontSize: '18px',
+      color: '#93c5fd', stroke: '#000', strokeThickness: 3
+    }).setOrigin(0, 0.5).setScrollFactor(0).setInteractive({ cursor: 'pointer' });
+    backBtn.on('pointerover', () => backBtn.setColor('#ffffff'));
+    backBtn.on('pointerout',  () => backBtn.setColor('#93c5fd'));
+
+    // Pasek zasobów
+    this.add.text(VW - 20, 20, '💎 Kryształy: 0 / 15', {
+      fontFamily: 'Fredoka One', fontSize: '16px',
+      color: '#ffe66d', stroke: '#000', strokeThickness: 3
+    }).setOrigin(1, 0.5).setScrollFactor(0);
+
+    // Postęp
+    this.add.text(VW - 20, 50, `Węzeł: 1 / ${NODES.length}`, {
+      fontFamily: 'Fredoka One', fontSize: '14px',
+      color: '#93c5fd', stroke: '#000', strokeThickness: 2
+    }).setOrigin(1, 0.5).setScrollFactor(0);
+
+    // Przycisk DALEJ (demo) — na dole ekranu
+    const nextBg = this.add.graphics().setScrollFactor(0);
+    nextBg.fillStyle(0x7c4dff, 1);
+    nextBg.fillRoundedRect(VW / 2 - 120, VH - 80, 240, 56, 20);
+    nextBg.fillStyle(0xffffff, 0.15);
+    nextBg.fillRoundedRect(VW / 2 - 116, VH - 76, 232, 24, { tl:17, tr:17, bl:0, br:0 });
+
+    const nextBtn = this.add.text(VW / 2, VH - 52, '▶  NASTĘPNY WĘZEŁ', {
+      fontFamily: 'Fredoka One', fontSize: '22px',
+      color: '#ffffff', stroke: '#000', strokeThickness: 2
+    }).setOrigin(0.5).setScrollFactor(0).setInteractive({ cursor: 'pointer' });
+
+    nextBtn.on('pointerdown', () => this._advanceToNext());
+    nextBtn.on('pointerover', () => {
+      this.tweens.add({ targets: [nextBg, nextBtn], scaleX: 1.04, scaleY: 1.04, duration: 100 });
+    });
+    nextBtn.on('pointerout',  () => {
+      this.tweens.add({ targets: [nextBg, nextBtn], scaleX: 1, scaleY: 1, duration: 100 });
+    });
+  }
+
+  // ── Kamera ────────────────────────────────────────────────────────────────
+  _setupCamera() {
+    this.cameras.main.setBackgroundColor('#020b18');
+  }
+
+  _snapCameraToNode(idx, instant) {
+    const [, y] = NODES[idx];
+    const targetY = Phaser.Math.Clamp(y - VH / 2, 0, WH - VH);
+    if (instant) {
+      this.cameras.main.setScrollY(targetY);
+    } else {
+      this.cameras.main.pan(VW / 2, y, 600, 'Sine.easeInOut');
+    }
+  }
+
+  // ── Cząsteczki atmosferyczne ──────────────────────────────────────────────
+  _particles() {
+    // Świetliki
+    for (let i = 0; i < 40; i++) {
+      const x = Math.random() * VW;
+      const y = Math.random() * WH;
+      const g = this.add.graphics();
+      g.fillStyle(0x00e5ff, 0.7);
+      g.fillCircle(0, 0, 2 + Math.random() * 2);
+      g.x = x; g.y = y;
+
+      // Losowy lot
+      this.tweens.add({
+        targets: g,
+        x: x + (Math.random() - 0.5) * 120,
+        y: y - 80 - Math.random() * 120,
+        alpha: 0,
+        duration: 3000 + Math.random() * 3000,
+        delay: Math.random() * 5000,
+        ease: 'Sine.easeInOut',
+        onComplete: () => {
+          g.x = Math.random() * VW;
+          g.y = Math.random() * WH;
+          g.alpha = 0.7;
+          this.tweens.add({
+            targets: g,
+            x: g.x + (Math.random() - 0.5) * 120,
+            y: g.y - 80 - Math.random() * 120,
+            alpha: 0,
+            duration: 3000 + Math.random() * 3000,
+            repeat: -1,
+            delay: Math.random() * 3000,
+          });
+        }
+      });
+    }
+
+    // Drobny pył / lodowe cząsteczki
+    for (let i = 0; i < 60; i++) {
+      const x = Math.random() * VW;
+      const y = Math.random() * WH;
+      const g = this.add.graphics();
+      g.fillStyle(0xffffff, 0.2 + Math.random() * 0.3);
+      g.fillCircle(0, 0, 0.5 + Math.random());
+      g.x = x; g.y = y;
+      this.tweens.add({
+        targets: g,
+        y: y - 200 - Math.random() * 300,
+        alpha: 0,
+        duration: 6000 + Math.random() * 6000,
+        delay: Math.random() * 8000,
+        repeat: -1,
+        onRepeat: () => { g.y = Math.random() * WH; g.x = Math.random() * VW; g.alpha = 0.5; }
+      });
+    }
+  }
+
+  // ── Klik węzła ────────────────────────────────────────────────────────────
+  _onNodeTap(idx) {
+    if (this._moving) return;
+    if (idx === this._currentNode) {
+      this._showNodeDialog(idx);
+    }
+  }
+
+  _showNodeDialog(idx) {
+    const [nx, ny, type, label] = NODES[idx];
+    const col = NODE_COLORS[type];
+
+    // Overlay
+    const ov = this.add.graphics().setScrollFactor(0).setDepth(10);
+    ov.fillStyle(0x000000, 0.7);
+    ov.fillRect(0, 0, VW, VH);
+
+    // Panel
+    const panelY = VH / 2 - 140;
+    const panel  = this.add.graphics().setScrollFactor(0).setDepth(11);
+    panel.fillStyle(0x0d1f38, 1);
+    panel.fillRoundedRect(60, panelY, VW - 120, 280, 24);
+    panel.lineStyle(3, col, 1);
+    panel.strokeRoundedRect(60, panelY, VW - 120, 280, 24);
+
+    const dialogType = { math: 'Zadanie Matematyczne', chest: 'Skrzynia Skarbów',
+      npc: 'Tajemnicze Spotkanie', boss: 'Bitwa z Bossem',
+      start: 'Punkt startowy', finish: 'Koniec planety' }[type];
+
+    const t1 = this.add.text(VW / 2, panelY + 40, dialogType, {
+      fontFamily: 'Fredoka One', fontSize: '24px', color: '#' + col.toString(16).padStart(6, '0'),
+      stroke: '#000', strokeThickness: 3
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(12);
+
+    const t2 = this.add.text(VW / 2, panelY + 100, label, {
+      fontFamily: 'Fredoka One', fontSize: '36px', color: '#ffffff',
+      stroke: '#000', strokeThickness: 4
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(12);
+
+    const rewards = { math: '+2 kryształy', chest: '+5 kryształów!', npc: '+1 wskazówka',
+      boss: '+8 kryształów + Boss Medal', start: '', finish: 'Planeta ukończona!' }[type];
+
+    this.add.text(VW / 2, panelY + 160, rewards, {
+      fontFamily: 'Fredoka One', fontSize: '20px', color: '#ffe66d',
+      stroke: '#000', strokeThickness: 3
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(12);
+
+    // Przycisk
+    const closeBg = this.add.graphics().setScrollFactor(0).setDepth(12);
+    closeBg.fillStyle(col, 1);
+    closeBg.fillRoundedRect(VW / 2 - 100, panelY + 210, 200, 50, 18);
+    const closeBtn = this.add.text(VW / 2, panelY + 235, 'ZAGRAJ!', {
+      fontFamily: 'Fredoka One', fontSize: '22px', color: '#fff',
+      stroke: '#000', strokeThickness: 3
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(13).setInteractive({ cursor: 'pointer' });
+
+    const cleanup = () => { ov.destroy(); panel.destroy(); t1.destroy(); t2.destroy(); closeBg.destroy(); closeBtn.destroy(); };
+    closeBtn.on('pointerdown', () => { cleanup(); this._advanceToNext(); });
+    ov.setInteractive().on('pointerdown', cleanup);
+  }
+
+  // ── Animacja przejścia do następnego węzła ────────────────────────────────
+  _advanceToNext() {
+    if (this._moving || this._currentNode >= NODES.length - 1) return;
+    this._moving = true;
+
+    const nextIdx  = this._currentNode + 1;
+    const [tx, ty] = NODES[nextIdx];
+    const [fx, fy] = NODES[this._currentNode];
+
+    // Wyczyść tweeny idle
+    this.tweens.killTweensOf(this._player);
+
+    // Skok łukowy do następnego węzła
+    const midX = (fx + tx) / 2;
+    const midY = (fy + ty) / 2 - 80;
+
+    this.tweens.add({
+      targets: this._player,
+      x: { value: tx, ease: 'Linear' },
+      y: { value: ty - 50, ease: 'Quad.easeOut' },
+      duration: 700,
+      ease: 'Linear',
+      onUpdate: (tween) => {
+        const t   = tween.progress;
+        const arc = Math.sin(t * Math.PI) * -90;
+        this._player.y = Phaser.Math.Linear(fy - 50, ty - 50, t) + arc;
+      },
+      onComplete: () => {
+        this._currentNode = nextIdx;
+        this._moving = false;
+
+        // Bounce po lądowaniu
+        this.tweens.add({
+          targets: this._player, scaleX: 1.3, scaleY: 0.75,
+          duration: 100, yoyo: true, ease: 'Back.easeOut',
+          onComplete: () => {
+            // Idle bob wznowiony
+            this.tweens.add({
+              targets: this._player, y: ty - 58,
+              duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+            });
+            // Cząsteczki lądowania
+            this._landingBurst(tx, ty - 30);
+          }
+        });
+
+        // Przesuń kamerę
+        this._snapCameraToNode(nextIdx, false);
+
+        // Odśwież węzły
+        this._nodeObjects.forEach(n => n.destroy());
+        this._glowPath.destroy();
+        this._drawNodes();
+        this._strokePathUpTo(this.add.graphics().setDepth(1), nextIdx);
+      }
+    });
+
+    // Kamera podąża za postacią w trakcie skoku
+    this.cameras.main.pan(VW / 2, ty, 700, 'Sine.easeInOut');
+  }
+
+  _landingBurst(x, y) {
+    for (let i = 0; i < 10; i++) {
+      const angle = (i / 10) * Math.PI * 2;
+      const dist  = 30 + Math.random() * 50;
+      const g     = this.add.graphics();
+      g.fillStyle(0x4ecdc4, 0.8);
+      g.fillCircle(0, 0, 3 + Math.random() * 4);
+      g.x = x; g.y = y;
+      this.tweens.add({
+        targets: g,
+        x: x + Math.cos(angle) * dist,
+        y: y + Math.sin(angle) * dist,
+        alpha: 0, scale: 0,
+        duration: 400, ease: 'Quad.easeOut',
+        onComplete: () => g.destroy()
+      });
+    }
+  }
+}
+
+// ─── Konfiguracja Phaser ────────────────────────────────────────────────────
+const config = {
+  type: Phaser.AUTO,
+  width: VW, height: VH,
+  backgroundColor: '#020b18',
+  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+  scene: PlanetScene
+};
+
+document.fonts.ready.then(() => new Phaser.Game(config));
+</script>
+</body>
+</html>
