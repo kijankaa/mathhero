@@ -206,5 +206,35 @@ text = "🏆 Pobij Rekord"
 theme_override_font_sizes/font_size = 16
 visible = false
 
+[node name="DifficultyLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 700.0
+offset_bottom = 740.0
+grow_horizontal = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+text = ""
+theme_override_font_sizes/font_size = 16
+visible = false
+
+[node name="ApplyDifficultyButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -130.0
+offset_top = -300.0
+offset_right = 130.0
+offset_bottom = -260.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "✅ Zastosuj"
+theme_override_font_sizes/font_size = 16
+visible = false
+
 [node name="RewardPopup" parent="." instance=ExtResource("2_rpopup")]
 layout_mode = 1

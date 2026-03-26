@@ -24,6 +24,10 @@ var daily_challenge_date: String = ""        # "YYYY-MM-DD" ostatnio ukończoneg
 var daily_challenge_streak: int = 0          # seria dziennych wyzwań
 var best_session_score: int = 0              # najlepszy wynik kiedykolwiek (dowolna sesja)
 
+# Statystyki i Historia (Epic 7)
+var session_history: Array[Dictionary] = []  # max 50 wpisów: date, op, correct, total, accuracy, score, duration
+var operation_records: Dictionary = {}        # { op_type: { best_accuracy: int, best_score: int } }
+
 
 static func create(profile_name: String, avatar: int) -> PlayerProfile:
 	var p := PlayerProfile.new()
@@ -56,6 +60,8 @@ func to_dict() -> Dictionary:
 		"daily_challenge_date": daily_challenge_date,
 		"daily_challenge_streak": daily_challenge_streak,
 		"best_session_score": best_session_score,
+		"session_history": session_history,
+		"operation_records": operation_records,
 	}
 
 
@@ -83,4 +89,10 @@ static func from_dict(d: Dictionary) -> PlayerProfile:
 	p.daily_challenge_date = d.get("daily_challenge_date", "")
 	p.daily_challenge_streak = int(d.get("daily_challenge_streak", 0))
 	p.best_session_score = int(d.get("best_session_score", 0))
+	for item: Variant in d.get("session_history", []):
+		if item is Dictionary:
+			p.session_history.append(item)
+	var raw_records: Variant = d.get("operation_records", {})
+	if raw_records is Dictionary:
+		p.operation_records = raw_records
 	return p

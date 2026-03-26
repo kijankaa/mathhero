@@ -16,10 +16,13 @@ extends Control
 @onready var _bonus_label: Label = $BonusLabel
 @onready var _bonus_button: Button = $BonusButton
 @onready var _beat_record_button: Button = $BeatRecordButton
+@onready var _difficulty_label: Label = $DifficultyLabel
+@onready var _apply_difficulty_button: Button = $ApplyDifficultyButton
 
 var _result: SessionResult = null
 var _stars_earned: int = 0
 var _new_badges: Array[String] = []
+var _suggested_max: int = 0
 
 
 func _ready() -> void:
@@ -36,6 +39,9 @@ func _ready() -> void:
 	_bonus_label.visible = false
 	_bonus_button.visible = false
 	_beat_record_button.visible = false
+	_difficulty_label.visible = false
+	_apply_difficulty_button.visible = false
+	_apply_difficulty_button.pressed.connect(_on_apply_difficulty_pressed)
 
 	if GameState.last_session_result != null:
 		_result = GameState.last_session_result
@@ -68,6 +74,10 @@ func _process_rewards() -> void:
 	# Aktualizuj najlepszy wynik
 	if _result.score > profile.best_session_score:
 		profile.best_session_score = _result.score
+
+	# Zapisz historię i rekordy (Epic 7)
+	_record_session_history(profile)
+	_update_operation_records(profile)
 
 	# Sprawdź ukończenie misji lub dziennego wyzwania
 	if GameState.active_mission_id != "":
@@ -182,6 +192,8 @@ func _update_ui() -> void:
 	if GameState.active_mission_id == "":
 		_show_bonus_mission()
 
+	_show_difficulty_suggestion()
+
 
 func _show_reward_popup() -> void:
 	if _stars_earned > 0 or not _new_badges.is_empty():
@@ -230,4 +242,62 @@ func _on_rewards_pressed() -> void:
 
 
 func _on_beat_record_pressed() -> void:
+	SceneManager.go_to(Constants.SCENE_SESSION)
+
+
+func _record_session_history(profile: PlayerProfile) -> void:
+	if _result == null:
+		return
+	var entry: Dictionary = {
+		"date": Time.get_date_string_from_system(),
+		"op": _result.config.operation_type if _result.config != null else "unknown",
+		"correct": _result.correct_count,
+		"total": _result.total_questions,
+		"accuracy": _result.get_accuracy_percent(),
+		"score": _result.score,
+		"duration": _result.duration_seconds,
+	}
+	profile.session_history.append(entry)
+	if profile.session_history.size() > 50:
+		profile.session_history.pop_front()
+
+
+func _update_operation_records(profile: PlayerProfile) -> void:
+	if _result == null or _result.config == null:
+		return
+	var op: String = _result.config.operation_type
+	var acc: int = _result.get_accuracy_percent()
+	var score: int = _result.score
+	if not profile.operation_records.has(op):
+		profile.operation_records[op] = {"best_accuracy": 0, "best_score": 0}
+	var rec: Dictionary = profile.operation_records[op]
+	if acc > int(rec.get("best_accuracy", 0)):
+		rec["best_accuracy"] = acc
+	if score > int(rec.get("best_score", 0)):
+		rec["best_score"] = score
+
+
+func _show_difficulty_suggestion() -> void:
+	if _result == null or _result.config == null:
+		return
+	var accuracy: float = _result.get_accuracy()
+	var current_max: int = _result.config.max_value
+	if accuracy >= 0.8:
+		_suggested_max = min(current_max * 2, 1000)
+		_difficulty_label.text = "💪 Świetnie! Spróbuj trudniejszego zakresu: 1–%d" % _suggested_max
+		_difficulty_label.visible = true
+		_apply_difficulty_button.visible = true
+	elif accuracy <= 0.4:
+		_suggested_max = max(current_max / 2, 10)
+		_difficulty_label.text = "💡 Spróbuj łatwiejszego zakresu: 1–%d" % _suggested_max
+		_difficulty_label.visible = true
+		_apply_difficulty_button.visible = true
+
+
+func _on_apply_difficulty_pressed() -> void:
+	if _result == null or _result.config == null or _suggested_max <= 0:
+		return
+	var new_config: SessionConfig = SessionConfig.from_dict(_result.config.to_dict())
+	new_config.max_value = _suggested_max
+	GameState.current_session_config = new_config
 	SceneManager.go_to(Constants.SCENE_SESSION)
