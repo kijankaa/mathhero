@@ -102,6 +102,7 @@ static func from_dict(d: Dictionary) -> SessionConfig:
 	c.scoring_streak_multiplier = d.get("scoring_streak_multiplier", false)
 	c.scoring_error_penalty = d.get("scoring_error_penalty", false)
 	c.base_points_value = d.get("base_points_value", 10)
-	c.mixed_operations = d.get("mixed_operations", [])
+	for item: Variant in d.get("mixed_operations", []):
+		c.mixed_operations.append(str(item))
 	c.order_of_ops_parentheses = d.get("order_of_ops_parentheses", "none")
 	return c

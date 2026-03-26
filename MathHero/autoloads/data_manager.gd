@@ -1,13 +1,17 @@
 # autoloads/data_manager.gd
-# JEDYNY punkt dostępu do localStorage.
+# JEDYNY punkt dostępu do localStorage (web) lub pliku JSON (editor/desktop).
 # NIE wywoływaj JavaScriptBridge.eval() nigdzie poza tym plikiem.
 extends Node
 
 # Wewnętrzny cache — unikamy zbędnych wywołań JS
 var _cache: Dictionary = {}
 
+const _FILE_PATH: String = "user://mathhero_data.json"
+
 
 func _ready() -> void:
+	if not OS.has_feature("web"):
+		_load_file_cache()
 	if OS.is_debug_build():
 		print("[DataManager] Inicjalizacja. Web: ", OS.has_feature("web"))
 
@@ -27,8 +31,7 @@ func save(key: String, data: Variant) -> bool:
 		var escaped: String = json_string.replace("\\", "\\\\").replace("'", "\\'")
 		JavaScriptBridge.eval("localStorage.setItem('" + key + "', '" + escaped + "')")
 	else:
-		if OS.is_debug_build():
-			print("[DataManager] TRYB EDITOR — dane nie są persystowane: ", key)
+		_save_file_cache()
 
 	return true
 
@@ -47,6 +50,7 @@ func load_data(key: String) -> Variant:
 		_cache[key] = parsed
 		return parsed
 
+	# Tryb desktop/editor — cache załadowany w _ready(), klucz nie istnieje
 	return null
 
 
@@ -71,5 +75,34 @@ func clear_all() -> void:
 	_cache.clear()
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("localStorage.clear()")
+	else:
+		_save_file_cache()
 	if OS.is_debug_build():
 		print("[DataManager] Wyczyszczono localStorage")
+
+
+# ─── Persystencja plikowa (editor/desktop) ────────────────────────────────────
+
+func _load_file_cache() -> void:
+	if not FileAccess.file_exists(_FILE_PATH):
+		return
+	var file: FileAccess = FileAccess.open(_FILE_PATH, FileAccess.READ)
+	if file == null:
+		push_error("[DataManager] Nie można otworzyć pliku: " + _FILE_PATH)
+		return
+	var content: String = file.get_as_text()
+	file.close()
+	var parsed: Variant = JSON.parse_string(content)
+	if parsed is Dictionary:
+		_cache = parsed
+	if OS.is_debug_build():
+		print("[DataManager] Załadowano dane z pliku, kluczy: ", _cache.size())
+
+
+func _save_file_cache() -> void:
+	var file: FileAccess = FileAccess.open(_FILE_PATH, FileAccess.WRITE)
+	if file == null:
+		push_error("[DataManager] Nie można zapisać pliku: " + _FILE_PATH)
+		return
+	file.store_string(JSON.stringify(_cache))
+	file.close()

@@ -63,19 +63,24 @@ static func from_dict(d: Dictionary) -> PlayerProfile:
 	var p := PlayerProfile.new()
 	p.id = d.get("id", "")
 	p.name = d.get("name", "")
-	p.avatar_id = d.get("avatar_id", 0)
+	p.avatar_id = int(d.get("avatar_id", 0))
 	p.last_config = d.get("last_config", {})
-	p.custom_presets = d.get("custom_presets", [])
-	p.stars = d.get("stars", 0)
-	p.stars_total_earned = d.get("stars_total_earned", 0)
-	p.owned_items = d.get("owned_items", ["helmet_1", "suit_1", "backpack_1", "boots_1", "gloves_1"])
+	for item: Variant in d.get("custom_presets", []):
+		if item is Dictionary:
+			p.custom_presets.append(item)
+	p.stars = int(d.get("stars", 0))
+	p.stars_total_earned = int(d.get("stars_total_earned", 0))
+	for item: Variant in d.get("owned_items", ["helmet_1", "suit_1", "backpack_1", "boots_1", "gloves_1"]):
+		p.owned_items.append(str(item))
 	p.equipped_costume = d.get("equipped_costume", {"helmet": "helmet_1", "suit": "suit_1", "backpack": "backpack_1", "boots": "boots_1", "gloves": "gloves_1"})
-	p.unlocked_badges = d.get("unlocked_badges", [])
-	p.session_count = d.get("session_count", 0)
-	p.total_correct = d.get("total_correct", 0)
-	p.max_streak_ever = d.get("max_streak_ever", 0)
-	p.completed_missions = d.get("completed_missions", [])
+	for item: Variant in d.get("unlocked_badges", []):
+		p.unlocked_badges.append(str(item))
+	p.session_count = int(d.get("session_count", 0))
+	p.total_correct = int(d.get("total_correct", 0))
+	p.max_streak_ever = int(d.get("max_streak_ever", 0))
+	for item: Variant in d.get("completed_missions", []):
+		p.completed_missions.append(str(item))
 	p.daily_challenge_date = d.get("daily_challenge_date", "")
-	p.daily_challenge_streak = d.get("daily_challenge_streak", 0)
-	p.best_session_score = d.get("best_session_score", 0)
+	p.daily_challenge_streak = int(d.get("daily_challenge_streak", 0))
+	p.best_session_score = int(d.get("best_session_score", 0))
 	return p
