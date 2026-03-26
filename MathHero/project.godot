@@ -34,6 +34,10 @@ SceneManager="*uid://c1rcl1nt2827d"
 
 window/size/viewport_width=1366
 window/size/viewport_height=1024
+
+[gui]
+
+theme/custom="res://assets/theme/game_theme.tres"
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
