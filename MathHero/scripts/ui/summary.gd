@@ -10,6 +10,7 @@ extends Control
 @onready var _play_again_button: Button = $PlayAgainButton
 @onready var _config_button: Button = $ConfigButton
 @onready var _rewards_button: Button = $RewardsButton
+@onready var _galaxy_button: Button = $GalaxyButton
 @onready var _reward_popup: Control = $RewardPopup
 @onready var _mission_result_label: Label = $MissionResultLabel
 @onready var _bonus_label: Label = $BonusLabel
@@ -25,6 +26,7 @@ func _ready() -> void:
 	_play_again_button.pressed.connect(_on_play_again_pressed)
 	_config_button.pressed.connect(_on_config_pressed)
 	_rewards_button.pressed.connect(_on_rewards_pressed)
+	_galaxy_button.pressed.connect(func() -> void: SceneManager.go_to(Constants.SCENE_GALAXY))
 	_beat_record_button.pressed.connect(_on_beat_record_pressed)
 
 	_level_up_label.visible = false

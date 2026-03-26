@@ -62,7 +62,7 @@ func _on_create_pressed() -> void:
 	ProfileSelectScript.save_profiles(profiles)
 
 	GameState.set_profile(profile)
-	SceneManager.go_to(Constants.SCENE_CONFIG)
+	SceneManager.go_to(Constants.SCENE_MAIN_MENU)
 
 
 func _on_cancel_pressed() -> void:

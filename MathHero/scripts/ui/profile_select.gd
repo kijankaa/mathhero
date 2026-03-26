@@ -37,7 +37,7 @@ func _add_profile_card(profile: PlayerProfile) -> void:
 
 func _on_profile_selected(profile: PlayerProfile) -> void:
 	GameState.set_profile(profile)
-	SceneManager.go_to(Constants.SCENE_CONFIG)
+	SceneManager.go_to(Constants.SCENE_MAIN_MENU)
 
 
 func _on_add_pressed() -> void:
