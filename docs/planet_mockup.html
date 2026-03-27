@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-  <title>MathHero — Selenia (mockup)</title>
+  <title>MathHero — Selenia</title>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -16,40 +16,47 @@
 <div id="fl">.</div>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <script>
-// ─── Konfiguracja świata ────────────────────────────────────────────────────
-const VW = 768, VH = 1024;   // viewport (ekran)
-const WH = 2800;              // wysokość świata (scrollowana)
+const VW = 768, VH = 1024;
 
-// Węzły ścieżki — od dołu (start) do góry (meta)
-// format: [x, y, typ, etykieta]
+// Sekcje tła: [klucz, y-start, y-end]  (od dołu do góry)
+const BG_SECTIONS = [
+  { key: 'bg_low', y: 1870, h: 930 },  // dolna — wejście do jaskini
+  { key: 'bg_mid', y: 930,  h: 940 },  // środkowa — ruiny
+  { key: 'bg_top', y: 0,    h: 930 },  // górna — boss arena
+];
+const WH = 2800;
+
+// Węzły ścieżki [x, y, typ, tekst]
 const NODES = [
-  [384, 2580, 'start',   'START'],
-  [220, 2340, 'math',    '2 + 3 = ?'],
-  [520, 2100, 'chest',   'SKARB'],
-  [260, 1860, 'math',    '7 + 5 = ?'],
-  [480, 1620, 'npc',     'SPOTKANIE'],
-  [200, 1380, 'math',    '9 + 6 = ?'],
-  [500, 1140, 'boss',    'BOSS'],
-  [300, 900,  'math',    '8 + 4 = ?'],
-  [440, 660,  'chest',   'SKARB'],
-  [384, 400,  'finish',  'KONIEC'],
+  [384, 2620, 'start',  'START'],
+  [210, 2380, 'math',   '5 + 3 = ?'],
+  [530, 2160, 'chest',  'SKARB'],
+  [250, 1940, 'math',   '7 + 6 = ?'],
+  [500, 1720, 'npc',    'SPOTKANIE'],
+  [220, 1480, 'math',   '12 + 9 = ?'],
+  [480, 1260, 'chest',  'SKARB'],
+  [240, 1040, 'math',   '15 + 8 = ?'],
+  [520, 800,  'boss',   '⚔ BOSS'],
+  [340, 560,  'math',   '11 + 7 = ?'],
+  [384, 320,  'finish', 'KONIEC'],
 ];
 
 const NODE_COLORS = {
-  start:  0x4ecdc4, math: 0x7c4dff, chest: 0xffd54f,
-  npc:    0x66bb6a, boss: 0xff4444, finish: 0xffe66d,
+  start: 0x4ecdc4, math: 0x7c4dff, chest: 0xffd54f,
+  npc: 0x66bb6a, boss: 0xff4444, finish: 0xffe66d,
 };
-
 const NODE_ICONS = {
   start: '▶', math: '?', chest: '★', npc: '!', boss: '☠', finish: '✦',
 };
 
-// ─── Scena planety ──────────────────────────────────────────────────────────
+// ─── Scena ──────────────────────────────────────────────────────────────────
 class PlanetScene extends Phaser.Scene {
   constructor() { super('Planet'); }
 
   preload() {
-    this.load.image('bg',        'selenia_bg.jpg');
+    this.load.image('bg_low',    'selenia_low.jpg');
+    this.load.image('bg_mid',    'selenia_mid.jpg');
+    this.load.image('bg_top',    'selenia_top.jpg');
     this.load.image('crystal',   'crystal.png');
     this.load.image('astronaut', 'astronaut.jpg');
   }
@@ -57,120 +64,112 @@ class PlanetScene extends Phaser.Scene {
   create() {
     this._currentNode = 0;
     this._moving = false;
+    this.cameras.main.setBounds(0, 0, VW, WH);
 
-    this._setupWorld();
-    this._drawBgTiles();
+    this._drawBackground();
     this._drawAtmosphere();
     this._placeDecorations();
     this._drawPath();
     this._drawNodes();
     this._createPlayer();
     this._createHUD();
-    this._setupCamera();
     this._particles();
 
-    // Kamera startuje na węźle 0 (dół)
-    this._snapCameraToNode(0, true);
+    this.cameras.main.setScrollY(
+      Phaser.Math.Clamp(NODES[0][1] - VH * 0.65, 0, WH - VH)
+    );
   }
 
-  // ── Świat ─────────────────────────────────────────────────────────────────
-  _setupWorld() {
-    this.cameras.main.setBounds(0, 0, VW, WH);
-  }
+  // ── Tło — 3 sekcje ────────────────────────────────────────────────────────
+  _drawBackground() {
+    BG_SECTIONS.forEach(({ key, y, h }) => {
+      const img = this.add.image(VW / 2, y + h / 2, key);
+      img.setDisplaySize(VW, h);
+      img.setDepth(0);
+    });
 
-  // ── Tło — kafelkowane w pionie ────────────────────────────────────────────
-  _drawBgTiles() {
-    const tex = this.textures.get('bg');
-    const th  = tex.getSourceImage().height;
-    const tw  = tex.getSourceImage().width;
-    const cols = Math.ceil(VW / tw) + 1;
-    const rows = Math.ceil(WH / th) + 1;
+    // Cienkie gradient-przejścia między sekcjami (miękkie łączenie)
+    [930, 1870].forEach(joinY => {
+      const g = this.add.graphics().setDepth(1);
+      g.fillGradientStyle(0x020b18, 0x020b18, 0x020b18, 0x020b18,
+        0, 0, 0.55, 0.55);
+      g.fillRect(0, joinY - 40, VW, 80);
+    });
 
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const img = this.add.image(c * tw + tw / 2, r * th + th / 2, 'bg');
-        img.setDisplaySize(VW, Math.ceil(WH / rows));
-      }
-    }
-
-    // Ciemna nakładka dla głębi
-    const ov = this.add.graphics();
-    ov.fillStyle(0x000510, 0.55);
+    // Bardzo lekka ciemna nakładka — żeby ścieżka i węzły były czytelne
+    const ov = this.add.graphics().setDepth(2);
+    ov.fillStyle(0x000510, 0.28);
     ov.fillRect(0, 0, VW, WH);
   }
 
-  // ── Atmosfera — mgła ──────────────────────────────────────────────────────
+  // ── Mgławice atmosferyczne ────────────────────────────────────────────────
   _drawAtmosphere() {
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < 14; i++) {
       const x = Math.random() * VW;
       const y = Math.random() * WH;
-      const r = 80 + Math.random() * 200;
-      const g = this.add.graphics();
-      g.fillStyle(0x0a3060, 0.06 + Math.random() * 0.06);
+      const r = 100 + Math.random() * 180;
+      const g = this.add.graphics().setDepth(3);
+      g.fillStyle(0x0a2a55, 0.05 + Math.random() * 0.05);
       g.fillCircle(x, y, r);
       this.tweens.add({
-        targets: g, x: x + (Math.random() - 0.5) * 60,
-        duration: 5000 + Math.random() * 5000,
+        targets: g,
+        x: x + (Math.random() - 0.5) * 80,
+        duration: 6000 + Math.random() * 5000,
         yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
         delay: Math.random() * 4000
       });
     }
   }
 
-  // ── Dekoracje — kryształy i kamienie ─────────────────────────────────────
+  // ── Dekoracje — kryształy na terenie ─────────────────────────────────────
   _placeDecorations() {
-    // Duże kryształy
-    const bigPositions = [
-      [80, 400], [650, 550], [100, 950], [680, 1100],
-      [60, 1500], [700, 1700], [120, 2100], [660, 2300],
-      [300, 750], [500, 1900],
+    // Duże kryształy — przy krawędziach, nie na ścieżce
+    const positions = [
+      [55,  2550, 0.16], [690, 2450, 0.13],
+      [40,  2200, 0.12], [710, 2100, 0.14],
+      [60,  1850, 0.10], [700, 1780, 0.11],
+      [45,  1550, 0.13], [715, 1430, 0.10],
+      [55,  1200, 0.12], [700, 1100, 0.14],
+      [50,  850,  0.11], [710, 750,  0.13],
+      [60,  500,  0.14], [690, 400,  0.12],
+      [350, 2700, 0.09], [420, 2050, 0.08],
+      [380, 1350, 0.10], [360, 650,  0.09],
     ];
-    bigPositions.forEach(([x, y]) => {
-      const sc  = 0.12 + Math.random() * 0.1;
-      const img = this.add.image(x, y, 'crystal')
-        .setScale(sc)
-        .setAlpha(0.85 + Math.random() * 0.15);
 
-      // Pulsowanie kryształu
+    positions.forEach(([x, y, sc]) => {
+      const img = this.add.image(x, y, 'crystal')
+        .setScale(sc).setAlpha(0.9).setDepth(4);
+
+      // Połysk kryształu
       this.tweens.add({
-        targets: img, alpha: 0.4 + Math.random() * 0.2,
-        duration: 1800 + Math.random() * 1200,
+        targets: img, alpha: 0.45,
+        duration: 1600 + Math.random() * 1400,
         yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-        delay: Math.random() * 2000
+        delay: Math.random() * 2500
       });
 
-      // Efekt świetlny pod kryształem
-      const glow = this.add.graphics();
-      glow.fillStyle(0x00e5ff, 0.12);
-      glow.fillEllipse(x, y + 20 * sc * 5, 80 * sc * 5, 20 * sc * 5);
+      // Glow pod kryształem
+      const gw = this.add.graphics().setDepth(3);
+      gw.fillStyle(0x00e5ff, 0.10);
+      gw.fillEllipse(x, y + sc * 280, sc * 500, sc * 100);
       this.tweens.add({
-        targets: glow, alpha: 0.04,
-        duration: 1800 + Math.random() * 1200,
+        targets: gw, alpha: 0.02,
+        duration: 1600 + Math.random() * 1400,
         yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-        delay: Math.random() * 2000
+        delay: Math.random() * 2500
       });
     });
 
-    // Małe kryształy
-    for (let i = 0; i < 25; i++) {
-      const x = 30 + Math.random() * (VW - 60);
-      const y = 200 + Math.random() * (WH - 400);
-      this.add.image(x, y, 'crystal')
-        .setScale(0.04 + Math.random() * 0.05)
-        .setAlpha(0.5 + Math.random() * 0.3);
-    }
-
-    // Gwiazdy w tle
-    for (let i = 0; i < 200; i++) {
-      const x = Math.random() * VW;
-      const y = Math.random() * WH;
-      const g = this.add.graphics();
-      g.fillStyle(0xffffff, 0.3 + Math.random() * 0.5);
+    // Gwiazdy
+    for (let i = 0; i < 150; i++) {
+      const x = Math.random() * VW, y = Math.random() * WH;
+      const g = this.add.graphics().setDepth(1);
+      g.fillStyle(0xffffff, 0.2 + Math.random() * 0.5);
       g.fillCircle(x, y, 0.5 + Math.random() * 1.5);
       if (Math.random() < 0.3) {
         this.tweens.add({
           targets: g, alpha: 0.05,
-          duration: 600 + Math.random() * 2000,
+          duration: 700 + Math.random() * 2000,
           yoyo: true, repeat: -1, delay: Math.random() * 3000
         });
       }
@@ -179,458 +178,485 @@ class PlanetScene extends Phaser.Scene {
 
   // ── Ścieżka ───────────────────────────────────────────────────────────────
   _drawPath() {
-    const graphics = this.add.graphics();
+    // Wyznaczone punkty kontrolne krzywej między węzłami
+    const pathGfx = this.add.graphics().setDepth(5);
 
     // Cień ścieżki
-    graphics.lineStyle(18, 0x000000, 0.5);
-    this._strokePath(graphics, 3);
+    pathGfx.lineStyle(16, 0x000000, 0.45);
+    this._tracePath(pathGfx, 3, 3);
 
-    // Główna linia ścieżki
-    graphics.lineStyle(10, 0x1a4080, 0.9);
-    this._strokePath(graphics, 0);
+    // Główna ścieżka — brukowany wygląd
+    pathGfx.lineStyle(11, 0x0d2545, 1);
+    this._tracePath(pathGfx, 0, 0);
 
-    // Świecąca linia (ukończone + bieżący)
-    const glowPath = this.add.graphics();
-    glowPath.lineStyle(5, 0x4ecdc4, 0.8);
-    this._strokePathUpTo(glowPath, this._currentNode);
-    this._glowPath = glowPath;
+    // Krawędzie ścieżki (jasna linia)
+    pathGfx.lineStyle(2, 0x2a6090, 0.7);
+    this._tracePath(pathGfx, -6, 0);
+    this._tracePath(pathGfx, 6, 0);
 
-    // Wzór — przerywane znaczniki na ścieżce
-    for (let i = 0; i < NODES.length - 1; i++) {
-      const [x1, y1] = NODES[i];
-      const [x2, y2] = NODES[i + 1];
-      for (let t = 0.2; t < 0.9; t += 0.2) {
-        const x = x1 + (x2 - x1) * t + (Math.sin(t * 8) * 25);
-        const y = y1 + (y2 - y1) * t;
-        const d = this.add.graphics();
-        d.fillStyle(0x2a6090, 0.6);
-        d.fillCircle(x, y, 3);
+    // Ukończona część ścieżki (świecąca)
+    this._glowGfx = this.add.graphics().setDepth(6);
+    this._redrawGlowPath();
+  }
+
+  _tracePath(gfx, offsetX, offsetY) {
+    const curve = this._buildCurve(offsetX, offsetY);
+    gfx.beginPath();
+    curve.forEach((pt, i) => {
+      if (i === 0) gfx.moveTo(pt.x, pt.y);
+      else gfx.lineTo(pt.x, pt.y);
+    });
+    gfx.strokePath();
+  }
+
+  _buildCurve(ox, oy) {
+    // Buduje wygładzoną krzywą przez węzły z losowym wygięciem
+    const pts = [];
+    for (let i = 0; i < NODES.length; i++) {
+      if (i === 0) { pts.push({ x: NODES[0][0] + ox, y: NODES[0][1] + oy }); continue; }
+      const [px, py] = NODES[i - 1];
+      const [cx, cy] = NODES[i];
+      const steps = 12;
+      const bx = (px + cx) / 2 + (i % 2 === 0 ? 40 : -40);
+      const by = (py + cy) / 2;
+      for (let t = 1; t <= steps; t++) {
+        const f = t / steps;
+        const x = (1-f)*(1-f)*px + 2*(1-f)*f*bx + f*f*cx + ox;
+        const y = (1-f)*(1-f)*py + 2*(1-f)*f*by + f*f*cy + oy;
+        pts.push({ x, y });
       }
     }
+    return pts;
   }
 
-  _strokePath(g, offsetX) {
-    g.beginPath();
-    NODES.forEach(([x, y], i) => {
-      if (i === 0) { g.moveTo(x + offsetX, y); return; }
-      const [px, py] = NODES[i - 1];
-      const mx = (px + x) / 2 + (Math.random() - 0.5) * 60;
-      const my = (py + y) / 2;
-      g.lineTo(mx + offsetX, my);
-      g.lineTo(x + offsetX, y);
+  _redrawGlowPath() {
+    this._glowGfx.clear();
+    if (this._currentNode === 0) return;
+    this._glowGfx.lineStyle(5, 0x4ecdc4, 0.9);
+    const pts = this._buildCurve(0, 0);
+    // Tylko do bieżącego węzła
+    const limit = Math.round(this._currentNode / (NODES.length - 1) * (pts.length - 1));
+    this._glowGfx.beginPath();
+    pts.slice(0, limit + 1).forEach((pt, i) => {
+      if (i === 0) this._glowGfx.moveTo(pt.x, pt.y);
+      else this._glowGfx.lineTo(pt.x, pt.y);
     });
-    g.strokePath();
-  }
-
-  _strokePathUpTo(g, nodeIdx) {
-    g.beginPath();
-    for (let i = 0; i <= Math.min(nodeIdx, NODES.length - 1); i++) {
-      const [x, y] = NODES[i];
-      if (i === 0) { g.moveTo(x, y); continue; }
-      g.lineTo(x, y);
-    }
-    g.strokePath();
+    this._glowGfx.strokePath();
   }
 
   // ── Węzły ─────────────────────────────────────────────────────────────────
   _drawNodes() {
-    this._nodeObjects = [];
-
+    this._nodeContainers = [];
     NODES.forEach(([x, y, type, label], i) => {
-      const col   = NODE_COLORS[type];
-      const icon  = NODE_ICONS[type];
-      const done  = i < this._currentNode;
-      const cur   = i === this._currentNode;
+      const done   = i < this._currentNode;
+      const cur    = i === this._currentNode;
       const locked = i > this._currentNode;
+      const col    = NODE_COLORS[type];
+      const icon   = NODE_ICONS[type];
+      const r      = cur ? 34 : 26;
 
-      const container = this.add.container(x, y);
+      const c = this.add.container(x, y).setDepth(8);
 
       // Cień
       const sh = this.add.graphics();
-      sh.fillStyle(0x000000, 0.4);
-      sh.fillCircle(3, 5, cur ? 36 : 28);
+      sh.fillStyle(0x000000, 0.45);
+      sh.fillCircle(3, 5, r + 2);
 
       // Pierścień zewnętrzny
       const ring = this.add.graphics();
-      ring.lineStyle(cur ? 5 : 3, col, locked ? 0.3 : 1);
-      ring.strokeCircle(0, 0, cur ? 36 : 28);
+      if (cur) {
+        ring.lineStyle(5, 0xffffff, 0.6);
+        ring.strokeCircle(0, 0, r + 6);
+      }
+      ring.lineStyle(cur ? 4 : 3, col, locked ? 0.25 : 1);
+      ring.strokeCircle(0, 0, r);
 
       // Wypełnienie
       const bg = this.add.graphics();
-      bg.fillStyle(done ? col : (locked ? 0x1a2a40 : col), locked ? 1 : 0.9);
-      bg.fillCircle(0, 0, cur ? 32 : 24);
-      if (done) {
-        bg.fillStyle(0xffffff, 0.2);
-        bg.fillCircle(-6, -6, 10);
+      bg.fillStyle(locked ? 0x0d1e35 : (done ? col : col), locked ? 1 : 0.85);
+      bg.fillCircle(0, 0, r - 2);
+      if (!locked) {
+        bg.fillStyle(0xffffff, 0.18);
+        bg.fillCircle(-r * 0.3, -r * 0.3, r * 0.38);
+      }
+
+      // Lock overlay dla zablokowanych
+      if (locked) {
+        bg.fillStyle(0x000000, 0.5);
+        bg.fillCircle(0, 0, r - 2);
       }
 
       // Ikona
       const ico = this.add.text(0, 1, icon, {
         fontFamily: 'Fredoka One',
-        fontSize: cur ? '22px' : '18px',
-        color: locked ? '#334466' : '#ffffff',
-        stroke: '#000000', strokeThickness: 2,
-      }).setOrigin(0.5);
-
-      // Etykieta (typ węzła)
-      const typLabel = this.add.text(0, cur ? 46 : 36, label, {
-        fontFamily: 'Fredoka One',
-        fontSize: '13px',
-        color: locked ? '#334466' : '#a0d8ef',
+        fontSize: `${cur ? 22 : 17}px`,
+        color: locked ? '#1e3a55' : '#ffffff',
         stroke: '#000000', strokeThickness: 3,
       }).setOrigin(0.5);
 
-      container.add([sh, ring, bg, ico, typLabel]);
+      // Etykieta pod węzłem
+      const lbl = this.add.text(0, r + 14, label, {
+        fontFamily: 'Fredoka One', fontSize: '12px',
+        color: locked ? '#1e3a55' : (cur ? '#ffe66d' : '#a0d8ef'),
+        stroke: '#000', strokeThickness: 3,
+      }).setOrigin(0.5);
 
-      // Pulsowanie bieżącego węzła
+      c.add([sh, ring, bg, ico, lbl]);
+
+      // Pulsowanie aktywnego
       if (cur) {
         this.tweens.add({
-          targets: container, scaleX: 1.12, scaleY: 1.12,
-          duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+          targets: c, scaleX: 1.1, scaleY: 1.1,
+          duration: 850, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
         });
-
-        // Glow wokół aktywnego węzła
-        const gl = this.add.graphics();
-        gl.fillStyle(col, 0.15);
-        gl.fillCircle(x, y, 60);
+        // Blask wokół
+        const glow = this.add.graphics().setDepth(7);
+        glow.fillStyle(col, 0.18);
+        glow.fillCircle(x, y, 65);
         this.tweens.add({
-          targets: gl, alpha: 0.03,
-          duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+          targets: glow, alpha: 0.04,
+          duration: 850, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
         });
+        this._activeGlow = glow;
       }
 
-      // Klik (tylko odblokowane lub bieżący)
+      // Interaktywność
       if (!locked) {
-        container.setSize(80, 80);
-        container.setInteractive({ cursor: 'pointer' });
-        container.on('pointerdown', () => this._onNodeTap(i));
-        container.on('pointerover', () => {
-          if (!cur) this.tweens.add({ targets: container, scaleX: 1.1, scaleY: 1.1, duration: 120 });
+        c.setSize(r * 2 + 20, r * 2 + 20);
+        c.setInteractive({ cursor: 'pointer' });
+        c.on('pointerdown', () => this._onNodeTap(i));
+        c.on('pointerover', () => {
+          if (!cur) this.tweens.add({ targets: c, scaleX: 1.1, scaleY: 1.1, duration: 100 });
         });
-        container.on('pointerout', () => {
-          if (!cur) this.tweens.add({ targets: container, scaleX: 1, scaleY: 1, duration: 120 });
+        c.on('pointerout', () => {
+          if (!cur) this.tweens.add({ targets: c, scaleX: 1, scaleY: 1, duration: 100 });
         });
       }
 
-      this._nodeObjects.push(container);
+      this._nodeContainers.push(c);
     });
   }
 
-  // ── Postać gracza ─────────────────────────────────────────────────────────
+  _refreshNodes() {
+    this._nodeContainers.forEach(c => c.destroy());
+    if (this._activeGlow) this._activeGlow.destroy();
+    this._drawNodes();
+    this._redrawGlowPath();
+  }
+
+  // ── Postać ────────────────────────────────────────────────────────────────
   _createPlayer() {
-    const [x, y] = NODES[0];
-    this._player = this.add.container(x, y - 50);
+    const [sx, sy] = NODES[0];
+    this._player = this.add.container(sx, sy - 45).setDepth(10);
 
-    // Koło pod postacią (cień)
     const shadow = this.add.graphics();
-    shadow.fillStyle(0x000000, 0.35);
-    shadow.fillEllipse(0, 28, 52, 14);
+    shadow.fillStyle(0x000000, 0.3);
+    shadow.fillEllipse(0, 30, 50, 12);
 
-    // Astronauta (okrągły kadr)
-    const mask  = this.make.graphics({ add: false });
-    mask.fillStyle(0xffffff);
-    mask.fillCircle(x, y - 50, 24);
-    const astro = this.add.image(0, 0, 'astronaut')
-      .setDisplaySize(48, 48);
+    const circle = this.add.graphics();
+    circle.fillStyle(0x4ecdc4, 0.25);
+    circle.fillCircle(0, 0, 28);
+    circle.lineStyle(3, 0x4ecdc4, 1);
+    circle.strokeCircle(0, 0, 28);
 
-    // Ramka wokół postaci
-    const frame = this.add.graphics();
-    frame.lineStyle(3, 0x4ecdc4, 1);
-    frame.strokeCircle(0, 0, 26);
-    frame.fillStyle(0x4ecdc4, 0.2);
-    frame.fillCircle(0, 0, 26);
+    const astro = this.add.image(0, -2, 'astronaut').setDisplaySize(46, 46);
 
-    // Wskaźnik (strzałka w górę)
-    const arrow = this.add.text(0, -42, '▲', {
-      fontFamily: 'Fredoka One', fontSize: '16px', color: '#ffe66d',
-      stroke: '#000', strokeThickness: 3
+    const arrow = this.add.text(0, -46, '▲', {
+      fontFamily: 'Fredoka One', fontSize: '15px',
+      color: '#ffe66d', stroke: '#000', strokeThickness: 3
     }).setOrigin(0.5);
 
-    this._player.add([shadow, astro, frame, arrow]);
+    this._player.add([shadow, astro, circle, arrow]);
 
-    // Idle bob
-    this.tweens.add({
-      targets: this._player, y: (NODES[0][1] - 50) - 8,
-      duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+    this._idleTween = this.tweens.add({
+      targets: this._player, y: sy - 53,
+      duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
     });
   }
 
-  // ── HUD ───────────────────────────────────────────────────────────────────
+  // ── HUD (scrollFactor 0 — fixed na ekranie) ───────────────────────────────
   _createHUD() {
-    // Kontener HUD jest fixed — nie scrolluje razem ze światem
-    const hudCam = this.cameras.add(0, 0, VW, VH);
-    hudCam.setScroll(0, 0);
+    // Górny pasek
+    const bar = this.add.graphics().setScrollFactor(0).setDepth(20);
+    bar.fillStyle(0x020c1a, 0.93);
+    bar.fillRect(0, 0, VW, 68);
+    bar.lineStyle(2, 0x1a4a80, 1);
+    bar.lineBetween(0, 68, VW, 68);
 
-    // Panel górny
-    const topBar = this.add.graphics();
-    topBar.fillStyle(0x050d1a, 0.92);
-    topBar.fillRect(0, 0, VW, 70);
-    topBar.lineStyle(2, 0x1a4080, 1);
-    topBar.lineBetween(0, 70, VW, 70);
-    topBar.setScrollFactor(0);
-
-    // Nazwa planety
-    this.add.text(VW / 2, 35, '❄  SELENIA', {
-      fontFamily: 'Fredoka One', fontSize: '28px',
+    this.add.text(VW / 2, 34, 'SELENIA', {
+      fontFamily: 'Fredoka One', fontSize: '30px',
       color: '#4ecdc4', stroke: '#000', strokeThickness: 3
-    }).setOrigin(0.5).setScrollFactor(0);
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(21);
 
-    // Przycisk powrotu
-    const backBtn = this.add.text(30, 35, '← Mapa', {
-      fontFamily: 'Fredoka One', fontSize: '18px',
-      color: '#93c5fd', stroke: '#000', strokeThickness: 3
-    }).setOrigin(0, 0.5).setScrollFactor(0).setInteractive({ cursor: 'pointer' });
-    backBtn.on('pointerover', () => backBtn.setColor('#ffffff'));
-    backBtn.on('pointerout',  () => backBtn.setColor('#93c5fd'));
+    this.add.text(22, 34, '← Mapa', {
+      fontFamily: 'Fredoka One', fontSize: '18px', color: '#93c5fd',
+      stroke: '#000', strokeThickness: 3
+    }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(21)
+      .setInteractive({ cursor: 'pointer' });
 
-    // Pasek zasobów
-    this.add.text(VW - 20, 20, '💎 Kryształy: 0 / 15', {
+    this._crystalLabel = this.add.text(VW - 18, 20, '💎 0 / 15', {
       fontFamily: 'Fredoka One', fontSize: '16px',
       color: '#ffe66d', stroke: '#000', strokeThickness: 3
-    }).setOrigin(1, 0.5).setScrollFactor(0);
+    }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(21);
 
-    // Postęp
-    this.add.text(VW - 20, 50, `Węzeł: 1 / ${NODES.length}`, {
-      fontFamily: 'Fredoka One', fontSize: '14px',
+    this._nodeLabel = this.add.text(VW - 18, 50, `Węzeł 1 / ${NODES.length}`, {
+      fontFamily: 'Fredoka One', fontSize: '13px',
       color: '#93c5fd', stroke: '#000', strokeThickness: 2
-    }).setOrigin(1, 0.5).setScrollFactor(0);
+    }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(21);
 
-    // Przycisk DALEJ (demo) — na dole ekranu
-    const nextBg = this.add.graphics().setScrollFactor(0);
-    nextBg.fillStyle(0x7c4dff, 1);
-    nextBg.fillRoundedRect(VW / 2 - 120, VH - 80, 240, 56, 20);
-    nextBg.fillStyle(0xffffff, 0.15);
-    nextBg.fillRoundedRect(VW / 2 - 116, VH - 76, 232, 24, { tl:17, tr:17, bl:0, br:0 });
+    // Przycisk Dalej
+    const btnY = VH - 55;
+    const btnBg = this.add.graphics().setScrollFactor(0).setDepth(20);
+    this._drawBtn(btnBg, VW / 2, btnY, 260, 52, 0x7c4dff, 0x4527a0);
 
-    const nextBtn = this.add.text(VW / 2, VH - 52, '▶  NASTĘPNY WĘZEŁ', {
-      fontFamily: 'Fredoka One', fontSize: '22px',
-      color: '#ffffff', stroke: '#000', strokeThickness: 2
-    }).setOrigin(0.5).setScrollFactor(0).setInteractive({ cursor: 'pointer' });
+    this._nextBtn = this.add.text(VW / 2, btnY, 'NASTĘPNY WĘZEŁ  ▶', {
+      fontFamily: 'Fredoka One', fontSize: '21px',
+      color: '#fff', stroke: '#000', strokeThickness: 2
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(21)
+      .setInteractive({ cursor: 'pointer' });
 
-    nextBtn.on('pointerdown', () => this._advanceToNext());
-    nextBtn.on('pointerover', () => {
-      this.tweens.add({ targets: [nextBg, nextBtn], scaleX: 1.04, scaleY: 1.04, duration: 100 });
+    this._nextBtn.on('pointerdown', () => this._advanceToNext());
+    this._nextBtn.on('pointerover', () => {
+      this.tweens.add({ targets: [btnBg, this._nextBtn], scaleX: 1.04, scaleY: 1.04, duration: 100 });
     });
-    nextBtn.on('pointerout',  () => {
-      this.tweens.add({ targets: [nextBg, nextBtn], scaleX: 1, scaleY: 1, duration: 100 });
+    this._nextBtn.on('pointerout', () => {
+      this.tweens.add({ targets: [btnBg, this._nextBtn], scaleX: 1, scaleY: 1, duration: 150 });
     });
   }
 
-  // ── Kamera ────────────────────────────────────────────────────────────────
-  _setupCamera() {
-    this.cameras.main.setBackgroundColor('#020b18');
+  _drawBtn(g, cx, cy, w, h, col, dark) {
+    g.fillStyle(0x000000, 0.3);
+    g.fillRoundedRect(cx - w/2 + 4, cy - h/2 + 5, w, h, 20);
+    g.fillStyle(col, 1);
+    g.fillRoundedRect(cx - w/2, cy - h/2, w, h, 20);
+    g.fillStyle(0xffffff, 0.18);
+    g.fillRoundedRect(cx - w/2 + 3, cy - h/2 + 3, w - 6, h/2 - 3, { tl:18, tr:18, bl:0, br:0 });
+    g.fillStyle(dark, 0.5);
+    g.fillRoundedRect(cx - w/2 + 3, cy + h/2 - 11, w - 6, 8, { tl:0, tr:0, bl:18, br:18 });
   }
 
-  _snapCameraToNode(idx, instant) {
-    const [, y] = NODES[idx];
-    const targetY = Phaser.Math.Clamp(y - VH / 2, 0, WH - VH);
-    if (instant) {
-      this.cameras.main.setScrollY(targetY);
-    } else {
-      this.cameras.main.pan(VW / 2, y, 600, 'Sine.easeInOut');
-    }
-  }
-
-  // ── Cząsteczki atmosferyczne ──────────────────────────────────────────────
+  // ── Cząsteczki ────────────────────────────────────────────────────────────
   _particles() {
     // Świetliki
-    for (let i = 0; i < 40; i++) {
-      const x = Math.random() * VW;
+    for (let i = 0; i < 50; i++) {
+      const x = 20 + Math.random() * (VW - 40);
       const y = Math.random() * WH;
-      const g = this.add.graphics();
-      g.fillStyle(0x00e5ff, 0.7);
-      g.fillCircle(0, 0, 2 + Math.random() * 2);
+      const g = this.add.graphics().setDepth(9);
+      g.fillStyle(0x00e5ff, 0.6 + Math.random() * 0.3);
+      g.fillCircle(0, 0, 1.5 + Math.random() * 2);
       g.x = x; g.y = y;
 
-      // Losowy lot
       this.tweens.add({
         targets: g,
-        x: x + (Math.random() - 0.5) * 120,
-        y: y - 80 - Math.random() * 120,
+        x: x + (Math.random() - 0.5) * 100,
+        y: y - 100 - Math.random() * 150,
         alpha: 0,
-        duration: 3000 + Math.random() * 3000,
-        delay: Math.random() * 5000,
-        ease: 'Sine.easeInOut',
-        onComplete: () => {
-          g.x = Math.random() * VW;
-          g.y = Math.random() * WH;
-          g.alpha = 0.7;
-          this.tweens.add({
-            targets: g,
-            x: g.x + (Math.random() - 0.5) * 120,
-            y: g.y - 80 - Math.random() * 120,
-            alpha: 0,
-            duration: 3000 + Math.random() * 3000,
-            repeat: -1,
-            delay: Math.random() * 3000,
-          });
-        }
-      });
-    }
-
-    // Drobny pył / lodowe cząsteczki
-    for (let i = 0; i < 60; i++) {
-      const x = Math.random() * VW;
-      const y = Math.random() * WH;
-      const g = this.add.graphics();
-      g.fillStyle(0xffffff, 0.2 + Math.random() * 0.3);
-      g.fillCircle(0, 0, 0.5 + Math.random());
-      g.x = x; g.y = y;
-      this.tweens.add({
-        targets: g,
-        y: y - 200 - Math.random() * 300,
-        alpha: 0,
-        duration: 6000 + Math.random() * 6000,
-        delay: Math.random() * 8000,
+        duration: 2500 + Math.random() * 3000,
+        delay: Math.random() * 6000,
         repeat: -1,
-        onRepeat: () => { g.y = Math.random() * WH; g.x = Math.random() * VW; g.alpha = 0.5; }
+        ease: 'Sine.easeIn',
+        onRepeat: () => { g.x = 20 + Math.random() * (VW-40); g.y = Math.random() * WH; g.alpha = 0.8; }
+      });
+    }
+
+    // Pył lodowy
+    for (let i = 0; i < 80; i++) {
+      const x = Math.random() * VW, y = Math.random() * WH;
+      const g = this.add.graphics().setDepth(9);
+      g.fillStyle(0xffffff, 0.15 + Math.random() * 0.25);
+      g.fillCircle(0, 0, 0.8 + Math.random());
+      g.x = x; g.y = y;
+      this.tweens.add({
+        targets: g, y: y - 300 - Math.random() * 400, alpha: 0,
+        duration: 7000 + Math.random() * 7000,
+        delay: Math.random() * 10000, repeat: -1,
+        onRepeat: () => { g.x = Math.random() * VW; g.y = Math.random() * WH; g.alpha = 0.3; }
       });
     }
   }
 
-  // ── Klik węzła ────────────────────────────────────────────────────────────
+  // ── Dialog węzła ──────────────────────────────────────────────────────────
   _onNodeTap(idx) {
-    if (this._moving) return;
-    if (idx === this._currentNode) {
-      this._showNodeDialog(idx);
-    }
+    if (this._moving || idx !== this._currentNode) return;
+    this._showDialog(idx);
   }
 
-  _showNodeDialog(idx) {
-    const [nx, ny, type, label] = NODES[idx];
-    const col = NODE_COLORS[type];
+  _showDialog(idx) {
+    const [, , type, label] = NODES[idx];
+    const col  = NODE_COLORS[type];
+    const hexC = '#' + col.toString(16).padStart(6, '0');
+    const desc = {
+      math:   'Rozwiąż zadanie matematyczne\naby zdobyć kryształy!',
+      chest:  'Odkryłeś skrzynię ze skarbami!\nSprawdź co w środku...',
+      npc:    'Tajemnicza istota czeka na Ciebie.\nCo jej powiedzieć?',
+      boss:   'Kryształowy Golem strzeże\ntego przejścia. Czas na bitwę!',
+      start:  'Punkt startowy Selenii.',
+      finish: 'Dotarłeś na szczyt Selenii!\nMożesz wyruszyć na Marsa.',
+    }[type];
+    const reward = {
+      math: '+2 kryształy', chest: '+5 kryształów!',
+      npc: '+1 wskazówka', boss: '+10 kryształów + Medal',
+      start: '', finish: 'Planeta ukończona! 🚀',
+    }[type];
 
     // Overlay
-    const ov = this.add.graphics().setScrollFactor(0).setDepth(10);
-    ov.fillStyle(0x000000, 0.7);
+    const ov = this.add.graphics().setScrollFactor(0).setDepth(30);
+    ov.fillStyle(0x000000, 0.72);
     ov.fillRect(0, 0, VW, VH);
 
-    // Panel
-    const panelY = VH / 2 - 140;
-    const panel  = this.add.graphics().setScrollFactor(0).setDepth(11);
-    panel.fillStyle(0x0d1f38, 1);
-    panel.fillRoundedRect(60, panelY, VW - 120, 280, 24);
+    const pY = VH / 2 - 160;
+    const panel = this.add.graphics().setScrollFactor(0).setDepth(31);
+    panel.fillStyle(0x0a1928, 1);
+    panel.fillRoundedRect(50, pY, VW - 100, 320, 24);
     panel.lineStyle(3, col, 1);
-    panel.strokeRoundedRect(60, panelY, VW - 120, 280, 24);
+    panel.strokeRoundedRect(50, pY, VW - 100, 320, 24);
+    // Dekoracyjny pasek koloru na górze panelu
+    panel.fillStyle(col, 0.8);
+    panel.fillRoundedRect(50, pY, VW - 100, 44, { tl:24, tr:24, bl:0, br:0 });
 
-    const dialogType = { math: 'Zadanie Matematyczne', chest: 'Skrzynia Skarbów',
-      npc: 'Tajemnicze Spotkanie', boss: 'Bitwa z Bossem',
-      start: 'Punkt startowy', finish: 'Koniec planety' }[type];
+    const typeNames = {
+      math: 'ZADANIE MATEMATYCZNE', chest: 'SKRZYNIA SKARBÓW',
+      npc: 'TAJEMNICZE SPOTKANIE', boss: 'BITWA Z BOSSEM',
+      start: 'START', finish: 'KONIEC PLANETY',
+    };
 
-    const t1 = this.add.text(VW / 2, panelY + 40, dialogType, {
-      fontFamily: 'Fredoka One', fontSize: '24px', color: '#' + col.toString(16).padStart(6, '0'),
-      stroke: '#000', strokeThickness: 3
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(12);
+    const objs = [];
+    objs.push(this.add.text(VW/2, pY + 22, typeNames[type], {
+      fontFamily: 'Fredoka One', fontSize: '18px',
+      color: '#ffffff', stroke: '#000', strokeThickness: 2
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(32));
 
-    const t2 = this.add.text(VW / 2, panelY + 100, label, {
-      fontFamily: 'Fredoka One', fontSize: '36px', color: '#ffffff',
-      stroke: '#000', strokeThickness: 4
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(12);
+    objs.push(this.add.text(VW/2, pY + 90, label, {
+      fontFamily: 'Fredoka One', fontSize: '38px',
+      color: hexC, stroke: '#000', strokeThickness: 4
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(32));
 
-    const rewards = { math: '+2 kryształy', chest: '+5 kryształów!', npc: '+1 wskazówka',
-      boss: '+8 kryształów + Boss Medal', start: '', finish: 'Planeta ukończona!' }[type];
+    objs.push(this.add.text(VW/2, pY + 160, desc, {
+      fontFamily: 'Fredoka One', fontSize: '18px',
+      color: '#c8e6ff', stroke: '#000', strokeThickness: 2,
+      align: 'center',
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(32));
 
-    this.add.text(VW / 2, panelY + 160, rewards, {
-      fontFamily: 'Fredoka One', fontSize: '20px', color: '#ffe66d',
-      stroke: '#000', strokeThickness: 3
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(12);
+    if (reward) {
+      objs.push(this.add.text(VW/2, pY + 236, reward, {
+        fontFamily: 'Fredoka One', fontSize: '20px',
+        color: '#ffe66d', stroke: '#000', strokeThickness: 3,
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(32));
+    }
 
     // Przycisk
-    const closeBg = this.add.graphics().setScrollFactor(0).setDepth(12);
-    closeBg.fillStyle(col, 1);
-    closeBg.fillRoundedRect(VW / 2 - 100, panelY + 210, 200, 50, 18);
-    const closeBtn = this.add.text(VW / 2, panelY + 235, 'ZAGRAJ!', {
-      fontFamily: 'Fredoka One', fontSize: '22px', color: '#fff',
-      stroke: '#000', strokeThickness: 3
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(13).setInteractive({ cursor: 'pointer' });
+    const btnG = this.add.graphics().setScrollFactor(0).setDepth(32);
+    this._drawBtn(btnG, VW/2, pY + 290, 200, 48, col, 0x000000);
+    objs.push(btnG);
 
-    const cleanup = () => { ov.destroy(); panel.destroy(); t1.destroy(); t2.destroy(); closeBg.destroy(); closeBtn.destroy(); };
-    closeBtn.on('pointerdown', () => { cleanup(); this._advanceToNext(); });
+    const btnT = this.add.text(VW/2, pY + 290, 'ZAGRAJ!', {
+      fontFamily: 'Fredoka One', fontSize: '22px',
+      color: '#fff', stroke: '#000', strokeThickness: 3,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(33)
+      .setInteractive({ cursor: 'pointer' });
+    objs.push(btnT);
+
+    const cleanup = () => {
+      [ov, panel, ...objs].forEach(o => o.destroy());
+    };
+    btnT.on('pointerdown', () => { cleanup(); this._advanceToNext(); });
     ov.setInteractive().on('pointerdown', cleanup);
   }
 
-  // ── Animacja przejścia do następnego węzła ────────────────────────────────
+  // ── Ruch postaci po ścieżce ───────────────────────────────────────────────
   _advanceToNext() {
     if (this._moving || this._currentNode >= NODES.length - 1) return;
     this._moving = true;
 
-    const nextIdx  = this._currentNode + 1;
-    const [tx, ty] = NODES[nextIdx];
-    const [fx, fy] = NODES[this._currentNode];
+    const nextIdx     = this._currentNode + 1;
+    const [tx, ty]    = NODES[nextIdx];
+    const [fromX, fromY] = NODES[this._currentNode];
 
-    // Wyczyść tweeny idle
+    // Zatrzymaj idle
+    if (this._idleTween) this._idleTween.stop();
     this.tweens.killTweensOf(this._player);
 
-    // Skok łukowy do następnego węzła
-    const midX = (fx + tx) / 2;
-    const midY = (fy + ty) / 2 - 80;
+    // Łukowy skok (krzywa quadratic)
+    let startTime = null;
+    const duration = 750;
+    const arcHeight = -110;
+    const playerStartY = fromY - 45;
+    const playerEndY   = ty - 45;
 
-    this.tweens.add({
-      targets: this._player,
-      x: { value: tx, ease: 'Linear' },
-      y: { value: ty - 50, ease: 'Quad.easeOut' },
-      duration: 700,
-      ease: 'Linear',
-      onUpdate: (tween) => {
-        const t   = tween.progress;
-        const arc = Math.sin(t * Math.PI) * -90;
-        this._player.y = Phaser.Math.Linear(fy - 50, ty - 50, t) + arc;
-      },
-      onComplete: () => {
-        this._currentNode = nextIdx;
-        this._moving = false;
+    const updateEvt = this.time.addEvent({
+      delay: 16, loop: true,
+      callback: () => {
+        if (startTime === null) startTime = this.time.now;
+        const t = Math.min((this.time.now - startTime) / duration, 1);
+        const easedT = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        this._player.x = fromX + (tx - fromX) * easedT;
+        const baseY = playerStartY + (playerEndY - playerStartY) * easedT;
+        this._player.y = baseY + Math.sin(easedT * Math.PI) * arcHeight;
+        // Obrót w kierunku ruchu
+        this._player.rotation = (tx - fromX > 0 ? 0.08 : -0.08) * Math.sin(easedT * Math.PI);
 
-        // Bounce po lądowaniu
-        this.tweens.add({
-          targets: this._player, scaleX: 1.3, scaleY: 0.75,
-          duration: 100, yoyo: true, ease: 'Back.easeOut',
-          onComplete: () => {
-            // Idle bob wznowiony
-            this.tweens.add({
-              targets: this._player, y: ty - 58,
-              duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
-            });
-            // Cząsteczki lądowania
-            this._landingBurst(tx, ty - 30);
-          }
-        });
-
-        // Przesuń kamerę
-        this._snapCameraToNode(nextIdx, false);
-
-        // Odśwież węzły
-        this._nodeObjects.forEach(n => n.destroy());
-        this._glowPath.destroy();
-        this._drawNodes();
-        this._strokePathUpTo(this.add.graphics().setDepth(1), nextIdx);
+        if (t >= 1) {
+          updateEvt.destroy();
+          this._player.x = tx;
+          this._player.y = playerEndY;
+          this._player.rotation = 0;
+          this._onArrived(nextIdx);
+        }
       }
     });
 
-    // Kamera podąża za postacią w trakcie skoku
-    this.cameras.main.pan(VW / 2, ty, 700, 'Sine.easeInOut');
+    // Kamera podąża
+    this.cameras.main.pan(VW / 2, ty, duration + 100, 'Sine.easeInOut');
   }
 
-  _landingBurst(x, y) {
-    for (let i = 0; i < 10; i++) {
-      const angle = (i / 10) * Math.PI * 2;
-      const dist  = 30 + Math.random() * 50;
-      const g     = this.add.graphics();
-      g.fillStyle(0x4ecdc4, 0.8);
+  _onArrived(nodeIdx) {
+    this._currentNode = nodeIdx;
+    this._moving = false;
+
+    // Bounce przy lądowaniu
+    this.tweens.add({
+      targets: this._player,
+      scaleX: 1.35, scaleY: 0.7,
+      duration: 90, yoyo: true, ease: 'Quad.easeOut',
+      onComplete: () => {
+        this._player.scaleX = 1; this._player.scaleY = 1;
+        // Wznów idle
+        const [, ny] = NODES[nodeIdx];
+        this._idleTween = this.tweens.add({
+          targets: this._player, y: ny - 53,
+          duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+        });
+      }
+    });
+
+    // Cząsteczki lądowania
+    this._burst(NODES[nodeIdx][0], NODES[nodeIdx][1] - 20, NODE_COLORS[NODES[nodeIdx][2]]);
+
+    // Aktualizuj UI
+    this._nodeLabel.setText(`Węzeł ${nodeIdx + 1} / ${NODES.length}`);
+    this._refreshNodes();
+  }
+
+  _burst(x, y, color) {
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      const d = 35 + Math.random() * 55;
+      const g = this.add.graphics().setDepth(11);
+      g.fillStyle(color, 0.9);
       g.fillCircle(0, 0, 3 + Math.random() * 4);
       g.x = x; g.y = y;
       this.tweens.add({
         targets: g,
-        x: x + Math.cos(angle) * dist,
-        y: y + Math.sin(angle) * dist,
+        x: x + Math.cos(angle) * d,
+        y: y + Math.sin(angle) * d - 15,
         alpha: 0, scale: 0,
-        duration: 400, ease: 'Quad.easeOut',
+        duration: 420, ease: 'Quad.easeOut',
         onComplete: () => g.destroy()
       });
     }
   }
 }
 
-// ─── Konfiguracja Phaser ────────────────────────────────────────────────────
 const config = {
   type: Phaser.AUTO,
   width: VW, height: VH,
