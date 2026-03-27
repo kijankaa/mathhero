@@ -398,27 +398,88 @@ class PlanetScene extends Phaser.Scene {
     const [sx, sy] = NODES[0];
     this._player = this.add.container(sx, sy - 44).setDepth(11);
 
+    // Cień
     const shadow = this.add.graphics();
-    shadow.fillStyle(0x000000, 0.35);
-    shadow.fillEllipse(0, 32, 52, 13);
+    shadow.fillStyle(0x000000, 0.3);
+    shadow.fillEllipse(0, 42, 44, 10);
 
-    const glow = this.add.graphics();
-    glow.fillStyle(0x4ecdc4, 0.22);
-    glow.fillCircle(0, 0, 30);
-    glow.lineStyle(3, 0x4ecdc4, 0.9);
-    glow.strokeCircle(0, 0, 29);
+    // Nogi (osobne obiekty — animowane)
+    this._legL = this.add.graphics();
+    this._legL.fillStyle(0xb0cce0, 1);
+    this._legL.fillRoundedRect(-11, 18, 9, 16, 3);
+    this._legL.fillStyle(0x7899aa, 1);
+    this._legL.fillRoundedRect(-12, 31, 11, 6, 2);
 
-    const astro = this.add.image(0, -1, 'astronaut').setDisplaySize(46, 46);
+    this._legR = this.add.graphics();
+    this._legR.fillStyle(0xb0cce0, 1);
+    this._legR.fillRoundedRect(2, 18, 9, 16, 3);
+    this._legR.fillStyle(0x7899aa, 1);
+    this._legR.fillRoundedRect(1, 31, 11, 6, 2);
 
-    const arrow = this.add.text(0, -47, '▲', {
+    // Ciało (statyczne)
+    this._bodyPart = this.add.graphics();
+    this._bodyPart.fillStyle(0xd0e8ff, 1);
+    this._bodyPart.fillRoundedRect(-12, -4, 24, 22, 5);
+    this._bodyPart.fillStyle(0x4ecdc4, 0.9);
+    this._bodyPart.fillRoundedRect(-7, 0, 14, 9, 3);
+    this._bodyPart.fillStyle(0xb8d8f0, 1);
+    this._bodyPart.fillRoundedRect(-20, -2, 9, 14, 4);
+    this._bodyPart.fillRoundedRect(11, -2, 9, 14, 4);
+    // Hełm
+    this._bodyPart.fillStyle(0xe8f4ff, 1);
+    this._bodyPart.fillCircle(0, -20, 16);
+    this._bodyPart.fillStyle(0x081830, 1);
+    this._bodyPart.fillEllipse(0, -20, 24, 16);
+    this._bodyPart.fillStyle(0x00e5ff, 0.5);
+    this._bodyPart.fillEllipse(0, -20, 20, 13);
+    this._bodyPart.fillStyle(0xffffff, 0.7);
+    this._bodyPart.fillEllipse(-5, -27, 8, 5);
+    this._bodyPart.lineStyle(3, 0xb8d8f0, 0.8);
+    this._bodyPart.strokeCircle(0, -20, 16);
+
+    const arrow = this.add.text(0, -52, '▲', {
       fontFamily: 'Fredoka One', fontSize: '14px',
       color: '#ffe66d', stroke: '#000', strokeThickness: 3,
     }).setOrigin(0.5);
 
-    this._player.add([shadow, astro, glow, arrow]);
+    this._player.add([shadow, this._legL, this._legR, this._bodyPart, arrow]);
+    this._idleTween = null;
+    this._walkTweenL = null; this._walkTweenR = null; this._walkBob = null;
+    this._startIdle();
+  }
+
+  _startIdle() {
+    if (this._walkTweenL) { this._walkTweenL.stop(); this._walkTweenL = null; }
+    if (this._walkTweenR) { this._walkTweenR.stop(); this._walkTweenR = null; }
+    if (this._walkBob)    { this._walkBob.stop();    this._walkBob    = null; }
+    if (this._idleTween)  { this._idleTween.stop(); }
+    this._legL.y = 0; this._legR.y = 0; this._bodyPart.y = 0;
+    this._player.scaleX = 1;
+    const baseY = this._player.y;
     this._idleTween = this.tweens.add({
-      targets: this._player, y: sy - 52,
-      duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+      targets: this._player, y: baseY - 8,
+      duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    });
+  }
+
+  _startWalk(dirX) {
+    if (this._idleTween)  { this._idleTween.stop();  this._idleTween  = null; }
+    if (this._walkTweenL) { this._walkTweenL.stop(); }
+    if (this._walkTweenR) { this._walkTweenR.stop(); }
+    if (this._walkBob)    { this._walkBob.stop(); }
+    this._legL.y = 0; this._legR.y = 0; this._bodyPart.y = 0;
+    this._player.scaleX = dirX < 0 ? -1 : 1;
+    this._walkTweenL = this.tweens.add({
+      targets: this._legL, y: -7,
+      duration: 210, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    });
+    this._walkTweenR = this.tweens.add({
+      targets: this._legR, y: -7,
+      duration: 210, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: 210,
+    });
+    this._walkBob = this.tweens.add({
+      targets: this._bodyPart, y: -3,
+      duration: 210, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     });
   }
 
@@ -599,49 +660,33 @@ class PlanetScene extends Phaser.Scene {
     const [tx, ty] = NODES[next];
     const [fx, fy] = NODES[this._currentNode];
 
-    if (this._idleTween) this._idleTween.stop();
-    this.tweens.killTweensOf(this._player);
+    this._startWalk(tx - fx);
 
-    const dur = 700, arc = -120;
-    const sy  = fy - 44, ey = ty - 44;
-    let t0    = null;
+    const cpX  = (fx + tx) / 2;
+    const cpY  = Math.min(fy, ty) - 80;
+    const prog = { t: 0 };
+    const fromY = fy - 44, toY = ty - 44, cpYo = cpY - 44;
 
-    const ev = this.time.addEvent({
-      delay: 15, loop: true,
-      callback: () => {
-        if (!t0) t0 = this.time.now;
-        const t  = Math.min((this.time.now - t0) / dur, 1);
-        const et = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
-        this._player.x = fx + (tx - fx) * et;
-        this._player.y = sy + (ey - sy) * et + Math.sin(et * Math.PI) * arc;
-        this._player.rotation = (tx > fx ? 0.07 : -0.07) * Math.sin(et * Math.PI);
-        if (t >= 1) {
-          ev.destroy();
-          this._player.x = tx; this._player.y = ey; this._player.rotation = 0;
-          this._onArrived(next);
-        }
-      }
+    this.tweens.add({
+      targets: prog, t: 1, duration: 1600, ease: 'Linear',
+      onUpdate: () => {
+        const t = prog.t, u = 1 - t;
+        this._player.x = u*u*fx   + 2*u*t*cpX  + t*t*tx;
+        this._player.y = u*u*fromY + 2*u*t*cpYo + t*t*toY;
+      },
+      onComplete: () => {
+        this._player.x = tx; this._player.y = ty - 44;
+        this._onArrived(next);
+      },
     });
-    this.cameras.main.pan(VW / 2, ty, 750, 'Sine.easeInOut');
+    this.cameras.main.pan(VW / 2, ty, 1600, 'Sine.easeInOut');
   }
 
   _onArrived(idx) {
     this._currentNode = idx;
     this._moving      = false;
     const [nx, ny]    = NODES[idx];
-
-    this.tweens.add({
-      targets: this._player, scaleX: 1.35, scaleY: 0.7,
-      duration: 85, yoyo: true, ease: 'Quad.easeOut',
-      onComplete: () => {
-        this._player.scaleX = 1; this._player.scaleY = 1;
-        this._idleTween = this.tweens.add({
-          targets: this._player, y: ny - 52,
-          duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
-        });
-      }
-    });
-
+    this._startIdle();
     this._burst(nx, ny - 18, NODE_COLORS[NODES[idx][2]]);
     this._nodeLbl.setText(`Węzeł ${idx+1} / ${NODES.length}`);
     this._refreshNodes();
