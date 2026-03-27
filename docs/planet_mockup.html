@@ -16,29 +16,20 @@
 <div id="fl">.</div>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <script>
-const VW = 768, VH = 1024;
+const VW = 768, VH = 1024, WH = 2800;
 
-// Sekcje tła: [klucz, y-start, y-end]  (od dołu do góry)
-const BG_SECTIONS = [
-  { key: 'bg_low', y: 1870, h: 930 },  // dolna — wejście do jaskini
-  { key: 'bg_mid', y: 930,  h: 940 },  // środkowa — ruiny
-  { key: 'bg_top', y: 0,    h: 930 },  // górna — boss arena
-];
-const WH = 2800;
-
-// Węzły ścieżki [x, y, typ, tekst]
 const NODES = [
-  [384, 2620, 'start',  'START'],
-  [210, 2380, 'math',   '5 + 3 = ?'],
-  [530, 2160, 'chest',  'SKARB'],
-  [250, 1940, 'math',   '7 + 6 = ?'],
-  [500, 1720, 'npc',    'SPOTKANIE'],
-  [220, 1480, 'math',   '12 + 9 = ?'],
-  [480, 1260, 'chest',  'SKARB'],
-  [240, 1040, 'math',   '15 + 8 = ?'],
-  [520, 800,  'boss',   '⚔ BOSS'],
-  [340, 560,  'math',   '11 + 7 = ?'],
-  [384, 320,  'finish', 'KONIEC'],
+  [384, 2580, 'start',  'START'],
+  [200, 2340, 'math',   '5 + 3 = ?'],
+  [540, 2110, 'chest',  'SKARB'],
+  [230, 1880, 'math',   '7 + 6 = ?'],
+  [520, 1650, 'npc',    'SPOTKANIE'],
+  [210, 1420, 'math',   '12 + 9 = ?'],
+  [510, 1190, 'chest',  'SKARB'],
+  [230, 960,  'math',   '15 + 8 = ?'],
+  [500, 730,  'boss',   'BOSS'],
+  [350, 500,  'math',   '11 + 7 = ?'],
+  [384, 270,  'finish', 'KONIEC'],
 ];
 
 const NODE_COLORS = {
@@ -49,15 +40,18 @@ const NODE_ICONS = {
   start: '▶', math: '?', chest: '★', npc: '!', boss: '☠', finish: '✦',
 };
 
-// ─── Scena ──────────────────────────────────────────────────────────────────
+// Strefy planety — różnią się kolorem tła i ozdobnikami
+const ZONES = [
+  { y: 1870, h: 930, tint: 0x112244, label: 'Wejście do Jaskini',  alpha: 0.0  },
+  { y: 930,  h: 940, tint: 0x0d1e44, label: 'Zamrożone Ruiny',     alpha: 0.08 },
+  { y: 0,    h: 930, tint: 0x1a0a44, label: 'Trona Kryształowa',   alpha: 0.14 },
+];
+
 class PlanetScene extends Phaser.Scene {
   constructor() { super('Planet'); }
 
   preload() {
-    this.load.image('bg_low',    'selenia_low.jpg');
-    this.load.image('bg_mid',    'selenia_mid.jpg');
-    this.load.image('bg_top',    'selenia_top.jpg');
-    this.load.image('crystal',   'crystal.png');
+    this.load.image('tile',      'selenia_tile.jpg');
     this.load.image('astronaut', 'astronaut.jpg');
   }
 
@@ -66,9 +60,9 @@ class PlanetScene extends Phaser.Scene {
     this._moving = false;
     this.cameras.main.setBounds(0, 0, VW, WH);
 
-    this._drawBackground();
-    this._drawAtmosphere();
-    this._placeDecorations();
+    this._drawTiledBackground();
+    this._drawZoneOverlays();
+    this._drawZoneLandmarks();
     this._drawPath();
     this._drawNodes();
     this._createPlayer();
@@ -76,171 +70,242 @@ class PlanetScene extends Phaser.Scene {
     this._particles();
 
     this.cameras.main.setScrollY(
-      Phaser.Math.Clamp(NODES[0][1] - VH * 0.65, 0, WH - VH)
+      Phaser.Math.Clamp(NODES[0][1] - VH * 0.6, 0, WH - VH)
     );
   }
 
-  // ── Tło — 3 sekcje ────────────────────────────────────────────────────────
-  _drawBackground() {
-    BG_SECTIONS.forEach(({ key, y, h }) => {
-      const img = this.add.image(VW / 2, y + h / 2, key);
-      img.setDisplaySize(VW, h);
-      img.setDepth(0);
-    });
+  // ── Kafelkowane tło ───────────────────────────────────────────────────────
+  _drawTiledBackground() {
+    const tex    = this.textures.get('tile');
+    const srcH   = tex.getSourceImage().height;
+    const srcW   = tex.getSourceImage().width;
+    const tileH  = Math.round(VW * srcH / srcW); // zachowaj proporcje przy szerokości VW
+    const rows   = Math.ceil(WH / tileH) + 1;
 
-    // Cienkie gradient-przejścia między sekcjami (miękkie łączenie)
-    [930, 1870].forEach(joinY => {
-      const g = this.add.graphics().setDepth(1);
-      g.fillGradientStyle(0x020b18, 0x020b18, 0x020b18, 0x020b18,
-        0, 0, 0.55, 0.55);
-      g.fillRect(0, joinY - 40, VW, 80);
-    });
-
-    // Bardzo lekka ciemna nakładka — żeby ścieżka i węzły były czytelne
-    const ov = this.add.graphics().setDepth(2);
-    ov.fillStyle(0x000510, 0.28);
-    ov.fillRect(0, 0, VW, WH);
-  }
-
-  // ── Mgławice atmosferyczne ────────────────────────────────────────────────
-  _drawAtmosphere() {
-    for (let i = 0; i < 14; i++) {
-      const x = Math.random() * VW;
-      const y = Math.random() * WH;
-      const r = 100 + Math.random() * 180;
-      const g = this.add.graphics().setDepth(3);
-      g.fillStyle(0x0a2a55, 0.05 + Math.random() * 0.05);
-      g.fillCircle(x, y, r);
-      this.tweens.add({
-        targets: g,
-        x: x + (Math.random() - 0.5) * 80,
-        duration: 6000 + Math.random() * 5000,
-        yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-        delay: Math.random() * 4000
-      });
+    for (let r = 0; r < rows; r++) {
+      const img = this.add.image(VW / 2, r * tileH + tileH / 2, 'tile')
+        .setDisplaySize(VW, tileH)
+        .setDepth(0);
+      // Naprzemiennie lekko odbij pionowo żeby ukryć powtórzenie
+      if (r % 2 === 1) img.setFlipY(true);
     }
   }
 
-  // ── Dekoracje — kryształy na terenie ─────────────────────────────────────
-  _placeDecorations() {
-    // Duże kryształy — przy krawędziach, nie na ścieżce
-    const positions = [
-      [55,  2550, 0.16], [690, 2450, 0.13],
-      [40,  2200, 0.12], [710, 2100, 0.14],
-      [60,  1850, 0.10], [700, 1780, 0.11],
-      [45,  1550, 0.13], [715, 1430, 0.10],
-      [55,  1200, 0.12], [700, 1100, 0.14],
-      [50,  850,  0.11], [710, 750,  0.13],
-      [60,  500,  0.14], [690, 400,  0.12],
-      [350, 2700, 0.09], [420, 2050, 0.08],
-      [380, 1350, 0.10], [360, 650,  0.09],
-    ];
-
-    positions.forEach(([x, y, sc]) => {
-      const img = this.add.image(x, y, 'crystal')
-        .setScale(sc).setAlpha(0.9).setDepth(4);
-
-      // Połysk kryształu
-      this.tweens.add({
-        targets: img, alpha: 0.45,
-        duration: 1600 + Math.random() * 1400,
-        yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-        delay: Math.random() * 2500
-      });
-
-      // Glow pod kryształem
-      const gw = this.add.graphics().setDepth(3);
-      gw.fillStyle(0x00e5ff, 0.10);
-      gw.fillEllipse(x, y + sc * 280, sc * 500, sc * 100);
-      this.tweens.add({
-        targets: gw, alpha: 0.02,
-        duration: 1600 + Math.random() * 1400,
-        yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-        delay: Math.random() * 2500
-      });
+  // ── Nakładki stref — delikatny kolor różnicuje obszary ───────────────────
+  _drawZoneOverlays() {
+    ZONES.forEach(({ y, h, tint, alpha }) => {
+      if (alpha <= 0) return;
+      const g = this.add.graphics().setDepth(2);
+      g.fillStyle(tint, alpha);
+      g.fillRect(0, y, VW, h);
     });
 
-    // Gwiazdy
-    for (let i = 0; i < 150; i++) {
-      const x = Math.random() * VW, y = Math.random() * WH;
-      const g = this.add.graphics().setDepth(1);
-      g.fillStyle(0xffffff, 0.2 + Math.random() * 0.5);
-      g.fillCircle(x, y, 0.5 + Math.random() * 1.5);
-      if (Math.random() < 0.3) {
-        this.tweens.add({
-          targets: g, alpha: 0.05,
-          duration: 700 + Math.random() * 2000,
-          yoyo: true, repeat: -1, delay: Math.random() * 3000
-        });
-      }
+    // Gradient boczny — ciemniejsze krawędzie dla poczucia głębi
+    const edge = this.add.graphics().setDepth(3);
+    edge.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.55, 0, 0, 0.55);
+    edge.fillRect(0, 0, 80, WH);
+    edge.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0, 0.55, 0.55, 0);
+    edge.fillRect(VW - 80, 0, 80, WH);
+  }
+
+  // ── Landmarki stref — elementy rysowane kodem ────────────────────────────
+  _drawZoneLandmarks() {
+    // STREFA DOLNA — wielkie kryształy po bokach
+    this._crystalGroup(60,  2500, 0x00e5ff, 3);
+    this._crystalGroup(680, 2400, 0x00e5ff, 2);
+    this._crystalGroup(80,  2150, 0x00c8e8, 2);
+    this._crystalGroup(700, 2200, 0x00c8e8, 2);
+
+    // STREFA ŚRODKOWA — ruiny (kamienne bloki)
+    this._ruinBlock(55,  1750, 90, 70);
+    this._ruinBlock(620, 1680, 80, 90);
+    this._ruinBlock(45,  1350, 70, 80);
+    this._ruinBlock(640, 1250, 85, 65);
+    this._ruinBlock(55,  1050, 75, 85);
+
+    // Glowing cracks w strefie środkowej
+    this._glowCrack(150, 1600, 200, 1480, 0x4ecdc4);
+    this._glowCrack(580, 1380, 650, 1280, 0x4ecdc4);
+    this._glowCrack(100, 1100, 300, 980,  0x00e5ff);
+
+    // STREFA GÓRNA — boss arena (wielki okrąg, kolumny)
+    this._bossArena(384, 620);
+    this._crystalGroup(50,  800, 0xaa44ff, 3);
+    this._crystalGroup(700, 750, 0xaa44ff, 3);
+    this._crystalGroup(50,  450, 0xff44aa, 2);
+    this._crystalGroup(700, 400, 0xff44aa, 2);
+
+    // Etykiety stref
+    ZONES.forEach(({ y, h, label }) => {
+      const t = this.add.text(VW / 2, y + 28, label.toUpperCase(), {
+        fontFamily: 'Fredoka One', fontSize: '13px',
+        color: '#ffffff', stroke: '#000', strokeThickness: 3, alpha: 0.35
+      }).setOrigin(0.5).setDepth(4).setAlpha(0.3);
+    });
+  }
+
+  _crystalGroup(x, y, color, count) {
+    const g = this.add.graphics().setDepth(4);
+    for (let i = 0; i < count; i++) {
+      const ox = (i - count / 2) * 18;
+      const h  = 40 + i * 12 + Math.random() * 10;
+      const w  = 12 - i * 1;
+      // Kryształ (sześciokąt)
+      g.fillStyle(color, 0.75);
+      g.fillPoints([
+        { x: x + ox,     y: y - h      },
+        { x: x + ox + w, y: y - h * 0.4},
+        { x: x + ox + w, y: y          },
+        { x: x + ox - w, y: y          },
+        { x: x + ox - w, y: y - h * 0.4},
+      ], true);
+      // Błysk
+      g.fillStyle(0xffffff, 0.3);
+      g.fillPoints([
+        { x: x + ox - 2, y: y - h      },
+        { x: x + ox + 3, y: y - h * 0.6},
+        { x: x + ox - 2, y: y - h * 0.5},
+      ], true);
     }
+    // Poświata u podstawy
+    g.fillStyle(color, 0.15);
+    g.fillEllipse(x, y + 5, count * 36, 14);
+
+    // Pulsowanie
+    this.tweens.add({
+      targets: g, alpha: 0.45,
+      duration: 1500 + Math.random() * 1000,
+      yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+      delay: Math.random() * 2000
+    });
+  }
+
+  _ruinBlock(x, y, w, h) {
+    const g = this.add.graphics().setDepth(4);
+    g.fillStyle(0x1a2a3a, 0.9);
+    g.fillRect(x, y, w, h);
+    // Krawędź (kamień)
+    g.lineStyle(2, 0x2a4060, 0.8);
+    g.strokeRect(x, y, w, h);
+    // Detale — pęknięcia
+    g.lineStyle(1, 0x1e3a55, 0.6);
+    g.lineBetween(x + w * 0.3, y, x + w * 0.4, y + h);
+    g.lineBetween(x, y + h * 0.4, x + w, y + h * 0.5);
+    // Mech/lód
+    g.fillStyle(0x00e5ff, 0.08);
+    g.fillRect(x + 2, y + 2, w - 4, h * 0.3);
+  }
+
+  _glowCrack(x1, y1, x2, y2, color) {
+    const g = this.add.graphics().setDepth(3);
+    g.lineStyle(3, color, 0.6);
+    g.lineBetween(x1, y1, x2, y2);
+    g.lineStyle(8, color, 0.1);
+    g.lineBetween(x1, y1, x2, y2);
+    this.tweens.add({
+      targets: g, alpha: 0.2,
+      duration: 2000 + Math.random() * 1500,
+      yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+      delay: Math.random() * 2000
+    });
+  }
+
+  _bossArena(cx, cy) {
+    const g = this.add.graphics().setDepth(4);
+    // Zewnętrzny pierścień areny
+    g.lineStyle(3, 0xaa00ff, 0.5);
+    g.strokeCircle(cx, cy, 200);
+    g.lineStyle(1, 0xaa00ff, 0.2);
+    g.strokeCircle(cx, cy, 180);
+    // Runiczne znaczniki
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const rx = cx + Math.cos(a) * 200;
+      const ry = cy + Math.sin(a) * 200;
+      g.fillStyle(0xaa00ff, 0.6);
+      g.fillCircle(rx, ry, 6);
+    }
+    // Środkowy symbol
+    g.lineStyle(2, 0xff44aa, 0.5);
+    g.strokeCircle(cx, cy, 40);
+    g.fillStyle(0xff44aa, 0.08);
+    g.fillCircle(cx, cy, 40);
+    // Krzyż w centrum
+    g.lineStyle(1, 0xff44aa, 0.4);
+    g.lineBetween(cx - 30, cy, cx + 30, cy);
+    g.lineBetween(cx, cy - 30, cx, cy + 30);
+
+    // Animacja areny
+    this.tweens.add({
+      targets: g, alpha: 0.4,
+      duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+    });
   }
 
   // ── Ścieżka ───────────────────────────────────────────────────────────────
   _drawPath() {
-    // Wyznaczone punkty kontrolne krzywej między węzłami
-    const pathGfx = this.add.graphics().setDepth(5);
+    const shadow = this.add.graphics().setDepth(5);
+    shadow.lineStyle(18, 0x000000, 0.5);
+    this._tracePath(shadow, 4, 4);
 
-    // Cień ścieżki
-    pathGfx.lineStyle(16, 0x000000, 0.45);
-    this._tracePath(pathGfx, 3, 3);
+    const main = this.add.graphics().setDepth(6);
+    // Podłoże ścieżki
+    main.lineStyle(14, 0x0a1830, 0.95);
+    this._tracePath(main, 0, 0);
+    // Nawierzchnia
+    main.lineStyle(8, 0x0f2a50, 0.9);
+    this._tracePath(main, 0, 0);
+    // Boczne linie
+    main.lineStyle(2, 0x2a5080, 0.5);
+    this._tracePath(main, -6, 0);
+    this._tracePath(main, 6, 0);
 
-    // Główna ścieżka — brukowany wygląd
-    pathGfx.lineStyle(11, 0x0d2545, 1);
-    this._tracePath(pathGfx, 0, 0);
-
-    // Krawędzie ścieżki (jasna linia)
-    pathGfx.lineStyle(2, 0x2a6090, 0.7);
-    this._tracePath(pathGfx, -6, 0);
-    this._tracePath(pathGfx, 6, 0);
-
-    // Ukończona część ścieżki (świecąca)
-    this._glowGfx = this.add.graphics().setDepth(6);
+    // Ukończona część
+    this._glowGfx = this.add.graphics().setDepth(7);
     this._redrawGlowPath();
   }
 
-  _tracePath(gfx, offsetX, offsetY) {
-    const curve = this._buildCurve(offsetX, offsetY);
-    gfx.beginPath();
-    curve.forEach((pt, i) => {
-      if (i === 0) gfx.moveTo(pt.x, pt.y);
-      else gfx.lineTo(pt.x, pt.y);
-    });
-    gfx.strokePath();
-  }
-
   _buildCurve(ox, oy) {
-    // Buduje wygładzoną krzywą przez węzły z losowym wygięciem
     const pts = [];
     for (let i = 0; i < NODES.length; i++) {
-      if (i === 0) { pts.push({ x: NODES[0][0] + ox, y: NODES[0][1] + oy }); continue; }
+      if (i === 0) {
+        pts.push({ x: NODES[0][0] + ox, y: NODES[0][1] + oy });
+        continue;
+      }
       const [px, py] = NODES[i - 1];
       const [cx, cy] = NODES[i];
-      const steps = 12;
-      const bx = (px + cx) / 2 + (i % 2 === 0 ? 40 : -40);
-      const by = (py + cy) / 2;
+      const steps = 14;
+      const bend  = i % 2 === 0 ? 50 : -50;
+      const bx    = (px + cx) / 2 + bend;
+      const by    = (py + cy) / 2;
       for (let t = 1; t <= steps; t++) {
         const f = t / steps;
-        const x = (1-f)*(1-f)*px + 2*(1-f)*f*bx + f*f*cx + ox;
-        const y = (1-f)*(1-f)*py + 2*(1-f)*f*by + f*f*cy + oy;
-        pts.push({ x, y });
+        pts.push({
+          x: (1-f)*(1-f)*px + 2*(1-f)*f*bx + f*f*cx + ox,
+          y: (1-f)*(1-f)*py + 2*(1-f)*f*by + f*f*cy + oy,
+        });
       }
     }
     return pts;
   }
 
+  _tracePath(g, ox, oy) {
+    const pts = this._buildCurve(ox, oy);
+    g.beginPath();
+    pts.forEach((p, i) => i === 0 ? g.moveTo(p.x, p.y) : g.lineTo(p.x, p.y));
+    g.strokePath();
+  }
+
   _redrawGlowPath() {
     this._glowGfx.clear();
     if (this._currentNode === 0) return;
-    this._glowGfx.lineStyle(5, 0x4ecdc4, 0.9);
-    const pts = this._buildCurve(0, 0);
-    // Tylko do bieżącego węzła
+    const pts   = this._buildCurve(0, 0);
     const limit = Math.round(this._currentNode / (NODES.length - 1) * (pts.length - 1));
+    this._glowGfx.lineStyle(5, 0x4ecdc4, 0.9);
     this._glowGfx.beginPath();
-    pts.slice(0, limit + 1).forEach((pt, i) => {
-      if (i === 0) this._glowGfx.moveTo(pt.x, pt.y);
-      else this._glowGfx.lineTo(pt.x, pt.y);
-    });
+    pts.slice(0, limit + 1).forEach((p, i) =>
+      i === 0 ? this._glowGfx.moveTo(p.x, p.y) : this._glowGfx.lineTo(p.x, p.y)
+    );
     this._glowGfx.strokePath();
   }
 
@@ -252,87 +317,71 @@ class PlanetScene extends Phaser.Scene {
       const cur    = i === this._currentNode;
       const locked = i > this._currentNode;
       const col    = NODE_COLORS[type];
-      const icon   = NODE_ICONS[type];
       const r      = cur ? 34 : 26;
 
-      const c = this.add.container(x, y).setDepth(8);
+      const c = this.add.container(x, y).setDepth(9);
 
-      // Cień
       const sh = this.add.graphics();
-      sh.fillStyle(0x000000, 0.45);
-      sh.fillCircle(3, 5, r + 2);
+      sh.fillStyle(0x000000, 0.5);
+      sh.fillCircle(3, 5, r + 3);
 
-      // Pierścień zewnętrzny
       const ring = this.add.graphics();
       if (cur) {
-        ring.lineStyle(5, 0xffffff, 0.6);
-        ring.strokeCircle(0, 0, r + 6);
+        ring.lineStyle(6, 0xffffff, 0.5);
+        ring.strokeCircle(0, 0, r + 7);
       }
-      ring.lineStyle(cur ? 4 : 3, col, locked ? 0.25 : 1);
+      ring.lineStyle(cur ? 4 : 3, col, locked ? 0.2 : 1);
       ring.strokeCircle(0, 0, r);
 
-      // Wypełnienie
       const bg = this.add.graphics();
-      bg.fillStyle(locked ? 0x0d1e35 : (done ? col : col), locked ? 1 : 0.85);
+      bg.fillStyle(locked ? 0x080f18 : col, locked ? 1 : 0.88);
       bg.fillCircle(0, 0, r - 2);
       if (!locked) {
-        bg.fillStyle(0xffffff, 0.18);
-        bg.fillCircle(-r * 0.3, -r * 0.3, r * 0.38);
+        bg.fillStyle(0xffffff, 0.2);
+        bg.fillCircle(-r * 0.28, -r * 0.28, r * 0.36);
+        if (locked) { bg.fillStyle(0x000000, 0.5); bg.fillCircle(0, 0, r - 2); }
       }
 
-      // Lock overlay dla zablokowanych
-      if (locked) {
-        bg.fillStyle(0x000000, 0.5);
-        bg.fillCircle(0, 0, r - 2);
-      }
-
-      // Ikona
-      const ico = this.add.text(0, 1, icon, {
-        fontFamily: 'Fredoka One',
-        fontSize: `${cur ? 22 : 17}px`,
-        color: locked ? '#1e3a55' : '#ffffff',
-        stroke: '#000000', strokeThickness: 3,
+      const ico = this.add.text(0, 1, NODE_ICONS[type], {
+        fontFamily: 'Fredoka One', fontSize: `${cur ? 22 : 17}px`,
+        color: locked ? '#1a2e44' : '#fff',
+        stroke: '#000', strokeThickness: 3,
       }).setOrigin(0.5);
 
-      // Etykieta pod węzłem
       const lbl = this.add.text(0, r + 14, label, {
         fontFamily: 'Fredoka One', fontSize: '12px',
-        color: locked ? '#1e3a55' : (cur ? '#ffe66d' : '#a0d8ef'),
+        color: locked ? '#1a2e44' : (cur ? '#ffe66d' : '#93c5fd'),
         stroke: '#000', strokeThickness: 3,
       }).setOrigin(0.5);
 
       c.add([sh, ring, bg, ico, lbl]);
 
-      // Pulsowanie aktywnego
       if (cur) {
         this.tweens.add({
           targets: c, scaleX: 1.1, scaleY: 1.1,
-          duration: 850, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+          duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
         });
-        // Blask wokół
-        const glow = this.add.graphics().setDepth(7);
-        glow.fillStyle(col, 0.18);
-        glow.fillCircle(x, y, 65);
+        const gl = this.add.graphics().setDepth(8);
+        gl.fillStyle(col, 0.2);
+        gl.fillCircle(x, y, 70);
         this.tweens.add({
-          targets: glow, alpha: 0.04,
-          duration: 850, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+          targets: gl, alpha: 0.04,
+          duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
         });
-        this._activeGlow = glow;
+        this._activeGlow = gl;
       }
 
-      // Interaktywność
       if (!locked) {
-        c.setSize(r * 2 + 20, r * 2 + 20);
+        c.setSize(r * 2 + 24, r * 2 + 24);
         c.setInteractive({ cursor: 'pointer' });
         c.on('pointerdown', () => this._onNodeTap(i));
         c.on('pointerover', () => {
-          if (!cur) this.tweens.add({ targets: c, scaleX: 1.1, scaleY: 1.1, duration: 100 });
+          if (!cur) this.tweens.add({ targets: c, scaleX: 1.12, scaleY: 1.12, duration: 100 });
         });
         c.on('pointerout', () => {
-          if (!cur) this.tweens.add({ targets: c, scaleX: 1, scaleY: 1, duration: 100 });
+          if (!cur) this.tweens.add({ targets: c, scaleX: 1, scaleY: 1, duration: 120 });
         });
       }
-
       this._nodeContainers.push(c);
     });
   }
@@ -347,130 +396,127 @@ class PlanetScene extends Phaser.Scene {
   // ── Postać ────────────────────────────────────────────────────────────────
   _createPlayer() {
     const [sx, sy] = NODES[0];
-    this._player = this.add.container(sx, sy - 45).setDepth(10);
+    this._player = this.add.container(sx, sy - 44).setDepth(11);
 
     const shadow = this.add.graphics();
-    shadow.fillStyle(0x000000, 0.3);
-    shadow.fillEllipse(0, 30, 50, 12);
+    shadow.fillStyle(0x000000, 0.35);
+    shadow.fillEllipse(0, 32, 52, 13);
 
-    const circle = this.add.graphics();
-    circle.fillStyle(0x4ecdc4, 0.25);
-    circle.fillCircle(0, 0, 28);
-    circle.lineStyle(3, 0x4ecdc4, 1);
-    circle.strokeCircle(0, 0, 28);
+    const glow = this.add.graphics();
+    glow.fillStyle(0x4ecdc4, 0.22);
+    glow.fillCircle(0, 0, 30);
+    glow.lineStyle(3, 0x4ecdc4, 0.9);
+    glow.strokeCircle(0, 0, 29);
 
-    const astro = this.add.image(0, -2, 'astronaut').setDisplaySize(46, 46);
+    const astro = this.add.image(0, -1, 'astronaut').setDisplaySize(46, 46);
 
-    const arrow = this.add.text(0, -46, '▲', {
-      fontFamily: 'Fredoka One', fontSize: '15px',
-      color: '#ffe66d', stroke: '#000', strokeThickness: 3
+    const arrow = this.add.text(0, -47, '▲', {
+      fontFamily: 'Fredoka One', fontSize: '14px',
+      color: '#ffe66d', stroke: '#000', strokeThickness: 3,
     }).setOrigin(0.5);
 
-    this._player.add([shadow, astro, circle, arrow]);
-
+    this._player.add([shadow, astro, glow, arrow]);
     this._idleTween = this.tweens.add({
-      targets: this._player, y: sy - 53,
+      targets: this._player, y: sy - 52,
       duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
     });
   }
 
-  // ── HUD (scrollFactor 0 — fixed na ekranie) ───────────────────────────────
+  // ── HUD ───────────────────────────────────────────────────────────────────
   _createHUD() {
-    // Górny pasek
     const bar = this.add.graphics().setScrollFactor(0).setDepth(20);
-    bar.fillStyle(0x020c1a, 0.93);
+    bar.fillStyle(0x020c1a, 0.94);
     bar.fillRect(0, 0, VW, 68);
     bar.lineStyle(2, 0x1a4a80, 1);
     bar.lineBetween(0, 68, VW, 68);
 
-    this.add.text(VW / 2, 34, 'SELENIA', {
-      fontFamily: 'Fredoka One', fontSize: '30px',
-      color: '#4ecdc4', stroke: '#000', strokeThickness: 3
+    this.add.text(VW / 2, 34, '❄  SELENIA', {
+      fontFamily: 'Fredoka One', fontSize: '29px',
+      color: '#4ecdc4', stroke: '#000', strokeThickness: 3,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(21);
 
-    this.add.text(22, 34, '← Mapa', {
-      fontFamily: 'Fredoka One', fontSize: '18px', color: '#93c5fd',
-      stroke: '#000', strokeThickness: 3
-    }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(21)
-      .setInteractive({ cursor: 'pointer' });
+    this.add.text(20, 34, '← Mapa', {
+      fontFamily: 'Fredoka One', fontSize: '17px',
+      color: '#93c5fd', stroke: '#000', strokeThickness: 3,
+    }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(21).setInteractive({ cursor: 'pointer' });
 
-    this._crystalLabel = this.add.text(VW - 18, 20, '💎 0 / 15', {
+    this._crystalLbl = this.add.text(VW - 16, 20, '💎 0 / 15', {
       fontFamily: 'Fredoka One', fontSize: '16px',
-      color: '#ffe66d', stroke: '#000', strokeThickness: 3
+      color: '#ffe66d', stroke: '#000', strokeThickness: 3,
     }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(21);
 
-    this._nodeLabel = this.add.text(VW - 18, 50, `Węzeł 1 / ${NODES.length}`, {
+    this._nodeLbl = this.add.text(VW - 16, 50, `Węzeł 1 / ${NODES.length}`, {
       fontFamily: 'Fredoka One', fontSize: '13px',
-      color: '#93c5fd', stroke: '#000', strokeThickness: 2
+      color: '#93c5fd', stroke: '#000', strokeThickness: 2,
     }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(21);
 
-    // Przycisk Dalej
-    const btnY = VH - 55;
-    const btnBg = this.add.graphics().setScrollFactor(0).setDepth(20);
-    this._drawBtn(btnBg, VW / 2, btnY, 260, 52, 0x7c4dff, 0x4527a0);
+    // Przycisk demo
+    const btnY = VH - 54, bW = 270, bH = 52;
+    const btnG = this.add.graphics().setScrollFactor(0).setDepth(20);
+    this._drawBtn(btnG, VW / 2, btnY, bW, bH, 0x7c4dff, 0x4527a0);
 
     this._nextBtn = this.add.text(VW / 2, btnY, 'NASTĘPNY WĘZEŁ  ▶', {
       fontFamily: 'Fredoka One', fontSize: '21px',
-      color: '#fff', stroke: '#000', strokeThickness: 2
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(21)
-      .setInteractive({ cursor: 'pointer' });
+      color: '#fff', stroke: '#000', strokeThickness: 2,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(21).setInteractive({ cursor: 'pointer' });
 
-    this._nextBtn.on('pointerdown', () => this._advanceToNext());
-    this._nextBtn.on('pointerover', () => {
-      this.tweens.add({ targets: [btnBg, this._nextBtn], scaleX: 1.04, scaleY: 1.04, duration: 100 });
-    });
-    this._nextBtn.on('pointerout', () => {
-      this.tweens.add({ targets: [btnBg, this._nextBtn], scaleX: 1, scaleY: 1, duration: 150 });
-    });
+    this._nextBtn.on('pointerdown',  () => this._advanceToNext());
+    this._nextBtn.on('pointerover',  () => this.tweens.add({ targets: [btnG, this._nextBtn], scaleX: 1.04, scaleY: 1.04, duration: 100 }));
+    this._nextBtn.on('pointerout',   () => this.tweens.add({ targets: [btnG, this._nextBtn], scaleX: 1,    scaleY: 1,    duration: 150 }));
   }
 
   _drawBtn(g, cx, cy, w, h, col, dark) {
-    g.fillStyle(0x000000, 0.3);
+    g.fillStyle(0x000000, 0.35);
     g.fillRoundedRect(cx - w/2 + 4, cy - h/2 + 5, w, h, 20);
     g.fillStyle(col, 1);
     g.fillRoundedRect(cx - w/2, cy - h/2, w, h, 20);
     g.fillStyle(0xffffff, 0.18);
-    g.fillRoundedRect(cx - w/2 + 3, cy - h/2 + 3, w - 6, h/2 - 3, { tl:18, tr:18, bl:0, br:0 });
-    g.fillStyle(dark, 0.5);
+    g.fillRoundedRect(cx - w/2 + 3, cy - h/2 + 3, w - 6, h / 2 - 3, { tl:18, tr:18, bl:0, br:0 });
+    g.fillStyle(dark, 0.55);
     g.fillRoundedRect(cx - w/2 + 3, cy + h/2 - 11, w - 6, 8, { tl:0, tr:0, bl:18, br:18 });
   }
 
   // ── Cząsteczki ────────────────────────────────────────────────────────────
   _particles() {
     // Świetliki
-    for (let i = 0; i < 50; i++) {
-      const x = 20 + Math.random() * (VW - 40);
-      const y = Math.random() * WH;
-      const g = this.add.graphics().setDepth(9);
-      g.fillStyle(0x00e5ff, 0.6 + Math.random() * 0.3);
+    for (let i = 0; i < 55; i++) {
+      const startX = 30 + Math.random() * (VW - 60);
+      const startY = Math.random() * WH;
+      const col    = Math.random() < 0.7 ? 0x00e5ff : 0xaa44ff;
+      const g      = this.add.graphics().setDepth(10);
+      g.fillStyle(col, 0.65 + Math.random() * 0.3);
       g.fillCircle(0, 0, 1.5 + Math.random() * 2);
-      g.x = x; g.y = y;
+      g.x = startX; g.y = startY;
 
       this.tweens.add({
         targets: g,
-        x: x + (Math.random() - 0.5) * 100,
-        y: y - 100 - Math.random() * 150,
+        x: startX + (Math.random() - 0.5) * 110,
+        y: startY - 90 - Math.random() * 140,
         alpha: 0,
-        duration: 2500 + Math.random() * 3000,
+        duration: 2800 + Math.random() * 3200,
         delay: Math.random() * 6000,
         repeat: -1,
         ease: 'Sine.easeIn',
-        onRepeat: () => { g.x = 20 + Math.random() * (VW-40); g.y = Math.random() * WH; g.alpha = 0.8; }
+        onRepeat: () => {
+          g.x = 30 + Math.random() * (VW - 60);
+          g.y = Math.random() * WH;
+          g.alpha = 0.8;
+        }
       });
     }
 
-    // Pył lodowy
-    for (let i = 0; i < 80; i++) {
-      const x = Math.random() * VW, y = Math.random() * WH;
-      const g = this.add.graphics().setDepth(9);
-      g.fillStyle(0xffffff, 0.15 + Math.random() * 0.25);
+    // Lodowy pył
+    for (let i = 0; i < 70; i++) {
+      const sx = Math.random() * VW, sy = Math.random() * WH;
+      const g  = this.add.graphics().setDepth(10);
+      g.fillStyle(0xffffff, 0.12 + Math.random() * 0.2);
       g.fillCircle(0, 0, 0.8 + Math.random());
-      g.x = x; g.y = y;
+      g.x = sx; g.y = sy;
       this.tweens.add({
-        targets: g, y: y - 300 - Math.random() * 400, alpha: 0,
-        duration: 7000 + Math.random() * 7000,
+        targets: g, y: sy - 250 - Math.random() * 350, alpha: 0,
+        duration: 8000 + Math.random() * 6000,
         delay: Math.random() * 10000, repeat: -1,
-        onRepeat: () => { g.x = Math.random() * VW; g.y = Math.random() * WH; g.alpha = 0.3; }
+        onRepeat: () => { g.x = Math.random() * VW; g.y = Math.random() * WH; g.alpha = 0.25; }
       });
     }
   }
@@ -482,175 +528,137 @@ class PlanetScene extends Phaser.Scene {
   }
 
   _showDialog(idx) {
-    const [, , type, label] = NODES[idx];
-    const col  = NODE_COLORS[type];
-    const hexC = '#' + col.toString(16).padStart(6, '0');
-    const desc = {
-      math:   'Rozwiąż zadanie matematyczne\naby zdobyć kryształy!',
-      chest:  'Odkryłeś skrzynię ze skarbami!\nSprawdź co w środku...',
-      npc:    'Tajemnicza istota czeka na Ciebie.\nCo jej powiedzieć?',
-      boss:   'Kryształowy Golem strzeże\ntego przejścia. Czas na bitwę!',
-      start:  'Punkt startowy Selenii.',
-      finish: 'Dotarłeś na szczyt Selenii!\nMożesz wyruszyć na Marsa.',
-    }[type];
-    const reward = {
-      math: '+2 kryształy', chest: '+5 kryształów!',
-      npc: '+1 wskazówka', boss: '+10 kryształów + Medal',
-      start: '', finish: 'Planeta ukończona! 🚀',
-    }[type];
+    const [,, type, label] = NODES[idx];
+    const col   = NODE_COLORS[type];
+    const hexC  = '#' + col.toString(16).padStart(6, '0');
+    const names = { math:'ZADANIE MATEMATYCZNE', chest:'SKRZYNIA SKARBÓW',
+                    npc:'TAJEMNICZE SPOTKANIE',  boss:'BITWA Z BOSSEM',
+                    start:'START', finish:'KONIEC PLANETY' };
+    const descs = { math:  'Rozwiąż zadanie\ni zdobądź kryształy!',
+                    chest: 'Odkryłeś skrzynię skarbów!\nCo kryje się w środku?',
+                    npc:   'Tajemnicza istota czeka.\nCo jej powiedzieć?',
+                    boss:  'Kryształowy Golem strzeże przejścia.\nCzas na bitwę!',
+                    start: 'Twoja przygoda\nna Selenii zaczyna się tutaj.',
+                    finish:'Dotarłeś na szczyt!\nMożesz lecieć na Marsa.' };
+    const rwds  = { math:'+2 kryształy', chest:'+5 kryształów!',
+                    npc:'+1 wskazówka',  boss:'+10 kryształów + Medal',
+                    start:'', finish:'Planeta ukończona!' };
 
-    // Overlay
+    const pY = VH / 2 - 155;
     const ov = this.add.graphics().setScrollFactor(0).setDepth(30);
-    ov.fillStyle(0x000000, 0.72);
+    ov.fillStyle(0x000000, 0.75);
     ov.fillRect(0, 0, VW, VH);
 
-    const pY = VH / 2 - 160;
     const panel = this.add.graphics().setScrollFactor(0).setDepth(31);
-    panel.fillStyle(0x0a1928, 1);
-    panel.fillRoundedRect(50, pY, VW - 100, 320, 24);
+    panel.fillStyle(0x08121e, 1);
+    panel.fillRoundedRect(44, pY, VW - 88, 310, 24);
     panel.lineStyle(3, col, 1);
-    panel.strokeRoundedRect(50, pY, VW - 100, 320, 24);
-    // Dekoracyjny pasek koloru na górze panelu
-    panel.fillStyle(col, 0.8);
-    panel.fillRoundedRect(50, pY, VW - 100, 44, { tl:24, tr:24, bl:0, br:0 });
-
-    const typeNames = {
-      math: 'ZADANIE MATEMATYCZNE', chest: 'SKRZYNIA SKARBÓW',
-      npc: 'TAJEMNICZE SPOTKANIE', boss: 'BITWA Z BOSSEM',
-      start: 'START', finish: 'KONIEC PLANETY',
-    };
+    panel.strokeRoundedRect(44, pY, VW - 88, 310, 24);
+    panel.fillStyle(col, 0.85);
+    panel.fillRoundedRect(44, pY, VW - 88, 46, { tl:24, tr:24, bl:0, br:0 });
 
     const objs = [];
-    objs.push(this.add.text(VW/2, pY + 22, typeNames[type], {
-      fontFamily: 'Fredoka One', fontSize: '18px',
-      color: '#ffffff', stroke: '#000', strokeThickness: 2
+    const add  = (o) => { objs.push(o); return o; };
+
+    add(this.add.text(VW/2, pY+23, names[type], {
+      fontFamily:'Fredoka One', fontSize:'18px', color:'#fff', stroke:'#000', strokeThickness:2
     }).setOrigin(0.5).setScrollFactor(0).setDepth(32));
 
-    objs.push(this.add.text(VW/2, pY + 90, label, {
-      fontFamily: 'Fredoka One', fontSize: '38px',
-      color: hexC, stroke: '#000', strokeThickness: 4
+    add(this.add.text(VW/2, pY+95, label, {
+      fontFamily:'Fredoka One', fontSize:'40px', color:hexC, stroke:'#000', strokeThickness:4
     }).setOrigin(0.5).setScrollFactor(0).setDepth(32));
 
-    objs.push(this.add.text(VW/2, pY + 160, desc, {
-      fontFamily: 'Fredoka One', fontSize: '18px',
-      color: '#c8e6ff', stroke: '#000', strokeThickness: 2,
-      align: 'center',
+    add(this.add.text(VW/2, pY+165, descs[type], {
+      fontFamily:'Fredoka One', fontSize:'18px', color:'#c8e6ff',
+      stroke:'#000', strokeThickness:2, align:'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(32));
 
-    if (reward) {
-      objs.push(this.add.text(VW/2, pY + 236, reward, {
-        fontFamily: 'Fredoka One', fontSize: '20px',
-        color: '#ffe66d', stroke: '#000', strokeThickness: 3,
+    if (rwds[type]) {
+      add(this.add.text(VW/2, pY+232, rwds[type], {
+        fontFamily:'Fredoka One', fontSize:'20px', color:'#ffe66d', stroke:'#000', strokeThickness:3
       }).setOrigin(0.5).setScrollFactor(0).setDepth(32));
     }
 
-    // Przycisk
-    const btnG = this.add.graphics().setScrollFactor(0).setDepth(32);
-    this._drawBtn(btnG, VW/2, pY + 290, 200, 48, col, 0x000000);
-    objs.push(btnG);
+    const btnG = add(this.add.graphics().setScrollFactor(0).setDepth(32));
+    this._drawBtn(btnG, VW/2, pY+283, 200, 48, col, 0x000000);
 
-    const btnT = this.add.text(VW/2, pY + 290, 'ZAGRAJ!', {
-      fontFamily: 'Fredoka One', fontSize: '22px',
-      color: '#fff', stroke: '#000', strokeThickness: 3,
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(33)
-      .setInteractive({ cursor: 'pointer' });
-    objs.push(btnT);
+    const btnT = add(this.add.text(VW/2, pY+283, 'ZAGRAJ!', {
+      fontFamily:'Fredoka One', fontSize:'22px', color:'#fff', stroke:'#000', strokeThickness:3
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(33).setInteractive({ cursor:'pointer' }));
 
-    const cleanup = () => {
-      [ov, panel, ...objs].forEach(o => o.destroy());
-    };
+    const cleanup = () => { ov.destroy(); panel.destroy(); objs.forEach(o => o.destroy()); };
     btnT.on('pointerdown', () => { cleanup(); this._advanceToNext(); });
     ov.setInteractive().on('pointerdown', cleanup);
   }
 
-  // ── Ruch postaci po ścieżce ───────────────────────────────────────────────
+  // ── Ruch postaci ──────────────────────────────────────────────────────────
   _advanceToNext() {
     if (this._moving || this._currentNode >= NODES.length - 1) return;
     this._moving = true;
+    const next = this._currentNode + 1;
+    const [tx, ty] = NODES[next];
+    const [fx, fy] = NODES[this._currentNode];
 
-    const nextIdx     = this._currentNode + 1;
-    const [tx, ty]    = NODES[nextIdx];
-    const [fromX, fromY] = NODES[this._currentNode];
-
-    // Zatrzymaj idle
     if (this._idleTween) this._idleTween.stop();
     this.tweens.killTweensOf(this._player);
 
-    // Łukowy skok (krzywa quadratic)
-    let startTime = null;
-    const duration = 750;
-    const arcHeight = -110;
-    const playerStartY = fromY - 45;
-    const playerEndY   = ty - 45;
+    const dur = 700, arc = -120;
+    const sy  = fy - 44, ey = ty - 44;
+    let t0    = null;
 
-    const updateEvt = this.time.addEvent({
-      delay: 16, loop: true,
+    const ev = this.time.addEvent({
+      delay: 15, loop: true,
       callback: () => {
-        if (startTime === null) startTime = this.time.now;
-        const t = Math.min((this.time.now - startTime) / duration, 1);
-        const easedT = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-        this._player.x = fromX + (tx - fromX) * easedT;
-        const baseY = playerStartY + (playerEndY - playerStartY) * easedT;
-        this._player.y = baseY + Math.sin(easedT * Math.PI) * arcHeight;
-        // Obrót w kierunku ruchu
-        this._player.rotation = (tx - fromX > 0 ? 0.08 : -0.08) * Math.sin(easedT * Math.PI);
-
+        if (!t0) t0 = this.time.now;
+        const t  = Math.min((this.time.now - t0) / dur, 1);
+        const et = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+        this._player.x = fx + (tx - fx) * et;
+        this._player.y = sy + (ey - sy) * et + Math.sin(et * Math.PI) * arc;
+        this._player.rotation = (tx > fx ? 0.07 : -0.07) * Math.sin(et * Math.PI);
         if (t >= 1) {
-          updateEvt.destroy();
-          this._player.x = tx;
-          this._player.y = playerEndY;
-          this._player.rotation = 0;
-          this._onArrived(nextIdx);
+          ev.destroy();
+          this._player.x = tx; this._player.y = ey; this._player.rotation = 0;
+          this._onArrived(next);
         }
       }
     });
-
-    // Kamera podąża
-    this.cameras.main.pan(VW / 2, ty, duration + 100, 'Sine.easeInOut');
+    this.cameras.main.pan(VW / 2, ty, 750, 'Sine.easeInOut');
   }
 
-  _onArrived(nodeIdx) {
-    this._currentNode = nodeIdx;
-    this._moving = false;
+  _onArrived(idx) {
+    this._currentNode = idx;
+    this._moving      = false;
+    const [nx, ny]    = NODES[idx];
 
-    // Bounce przy lądowaniu
     this.tweens.add({
-      targets: this._player,
-      scaleX: 1.35, scaleY: 0.7,
-      duration: 90, yoyo: true, ease: 'Quad.easeOut',
+      targets: this._player, scaleX: 1.35, scaleY: 0.7,
+      duration: 85, yoyo: true, ease: 'Quad.easeOut',
       onComplete: () => {
         this._player.scaleX = 1; this._player.scaleY = 1;
-        // Wznów idle
-        const [, ny] = NODES[nodeIdx];
         this._idleTween = this.tweens.add({
-          targets: this._player, y: ny - 53,
+          targets: this._player, y: ny - 52,
           duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
         });
       }
     });
 
-    // Cząsteczki lądowania
-    this._burst(NODES[nodeIdx][0], NODES[nodeIdx][1] - 20, NODE_COLORS[NODES[nodeIdx][2]]);
-
-    // Aktualizuj UI
-    this._nodeLabel.setText(`Węzeł ${nodeIdx + 1} / ${NODES.length}`);
+    this._burst(nx, ny - 18, NODE_COLORS[NODES[idx][2]]);
+    this._nodeLbl.setText(`Węzeł ${idx+1} / ${NODES.length}`);
     this._refreshNodes();
   }
 
   _burst(x, y, color) {
-    for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * Math.PI * 2;
-      const d = 35 + Math.random() * 55;
-      const g = this.add.graphics().setDepth(11);
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * Math.PI * 2;
+      const d = 30 + Math.random() * 60;
+      const g = this.add.graphics().setDepth(12);
       g.fillStyle(color, 0.9);
       g.fillCircle(0, 0, 3 + Math.random() * 4);
       g.x = x; g.y = y;
       this.tweens.add({
         targets: g,
-        x: x + Math.cos(angle) * d,
-        y: y + Math.sin(angle) * d - 15,
-        alpha: 0, scale: 0,
-        duration: 420, ease: 'Quad.easeOut',
+        x: x + Math.cos(a) * d, y: y + Math.sin(a) * d - 12,
+        alpha: 0, scale: 0, duration: 420, ease: 'Quad.easeOut',
         onComplete: () => g.destroy()
       });
     }
@@ -664,7 +672,6 @@ const config = {
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   scene: PlanetScene
 };
-
 document.fonts.ready.then(() => new Phaser.Game(config));
 </script>
 </body>
