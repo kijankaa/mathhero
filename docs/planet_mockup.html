@@ -51,14 +51,32 @@ class PlanetScene extends Phaser.Scene {
   constructor() { super('Planet'); }
 
   preload() {
-    this.load.image('tile',      'selenia_tile.jpg');
-    this.load.image('astronaut', 'astronaut.jpg');
+    this.load.image('tile', 'selenia_tile.jpg');
+    this.load.spritesheet('astro', 'astronaut_sheet.png', {
+      frameWidth: 256, frameHeight: 256,
+    });
   }
 
   create() {
     this._currentNode = 0;
     this._moving = false;
     this.cameras.main.setBounds(0, 0, VW, WH);
+
+    // Animacje kosmonauty (siatka 6x4, 256x256px)
+    // Wiersz 2 (Left), kol 1–4 → klatki 13–16
+    // Wiersz 1 (Down), kol 5 → klatka 11 (idle front)
+    this.anims.create({
+      key: 'walk',
+      frames: this.anims.generateFrameNumbers('astro', { frames: [13, 14, 15, 16] }),
+      frameRate: 8,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: 'idle',
+      frames: this.anims.generateFrameNumbers('astro', { frames: [11] }),
+      frameRate: 1,
+      repeat: 0,
+    });
 
     this._drawTiledBackground();
     this._drawZoneOverlays();
@@ -396,65 +414,30 @@ class PlanetScene extends Phaser.Scene {
   // ── Postać ────────────────────────────────────────────────────────────────
   _createPlayer() {
     const [sx, sy] = NODES[0];
-    this._player = this.add.container(sx, sy - 44).setDepth(11);
+    this._player = this.add.container(sx, sy - 60).setDepth(11);
 
-    // Cień
     const shadow = this.add.graphics();
     shadow.fillStyle(0x000000, 0.3);
-    shadow.fillEllipse(0, 42, 44, 10);
+    shadow.fillEllipse(0, 58, 64, 14);
 
-    // Nogi (osobne obiekty — animowane)
-    this._legL = this.add.graphics();
-    this._legL.fillStyle(0xb0cce0, 1);
-    this._legL.fillRoundedRect(-11, 18, 9, 16, 3);
-    this._legL.fillStyle(0x7899aa, 1);
-    this._legL.fillRoundedRect(-12, 31, 11, 6, 2);
+    this._astroSprite = this.add.sprite(0, 0, 'astro');
+    this._astroSprite.setDisplaySize(100, 100);
+    this._astroSprite.play('idle');
 
-    this._legR = this.add.graphics();
-    this._legR.fillStyle(0xb0cce0, 1);
-    this._legR.fillRoundedRect(2, 18, 9, 16, 3);
-    this._legR.fillStyle(0x7899aa, 1);
-    this._legR.fillRoundedRect(1, 31, 11, 6, 2);
-
-    // Ciało (statyczne)
-    this._bodyPart = this.add.graphics();
-    this._bodyPart.fillStyle(0xd0e8ff, 1);
-    this._bodyPart.fillRoundedRect(-12, -4, 24, 22, 5);
-    this._bodyPart.fillStyle(0x4ecdc4, 0.9);
-    this._bodyPart.fillRoundedRect(-7, 0, 14, 9, 3);
-    this._bodyPart.fillStyle(0xb8d8f0, 1);
-    this._bodyPart.fillRoundedRect(-20, -2, 9, 14, 4);
-    this._bodyPart.fillRoundedRect(11, -2, 9, 14, 4);
-    // Hełm
-    this._bodyPart.fillStyle(0xe8f4ff, 1);
-    this._bodyPart.fillCircle(0, -20, 16);
-    this._bodyPart.fillStyle(0x081830, 1);
-    this._bodyPart.fillEllipse(0, -20, 24, 16);
-    this._bodyPart.fillStyle(0x00e5ff, 0.5);
-    this._bodyPart.fillEllipse(0, -20, 20, 13);
-    this._bodyPart.fillStyle(0xffffff, 0.7);
-    this._bodyPart.fillEllipse(-5, -27, 8, 5);
-    this._bodyPart.lineStyle(3, 0xb8d8f0, 0.8);
-    this._bodyPart.strokeCircle(0, -20, 16);
-
-    const arrow = this.add.text(0, -52, '▲', {
+    const arrow = this.add.text(0, -58, '▲', {
       fontFamily: 'Fredoka One', fontSize: '14px',
       color: '#ffe66d', stroke: '#000', strokeThickness: 3,
     }).setOrigin(0.5);
 
-    this._player.add([shadow, this._legL, this._legR, this._bodyPart, arrow]);
+    this._player.add([shadow, this._astroSprite, arrow]);
     this._idleTween = null;
-    this._walkTweenL = null; this._walkTweenR = null; this._walkBob = null;
     this._startIdle();
   }
 
   _startIdle() {
-    if (this._walkTweenL) { this._walkTweenL.stop(); this._walkTweenL = null; }
-    if (this._walkTweenR) { this._walkTweenR.stop(); this._walkTweenR = null; }
-    if (this._walkBob)    { this._walkBob.stop();    this._walkBob    = null; }
-    if (this._idleTween)  { this._idleTween.stop(); }
-    this._legL.y = 0; this._legR.y = 0; this._bodyPart.y = 0;
+    if (this._idleTween) { this._idleTween.stop(); }
     this._player.scaleX = 1;
+    this._astroSprite.play('idle');
     const baseY = this._player.y;
     this._idleTween = this.tweens.add({
       targets: this._player, y: baseY - 8,
@@ -463,24 +446,10 @@ class PlanetScene extends Phaser.Scene {
   }
 
   _startWalk(dirX) {
-    if (this._idleTween)  { this._idleTween.stop();  this._idleTween  = null; }
-    if (this._walkTweenL) { this._walkTweenL.stop(); }
-    if (this._walkTweenR) { this._walkTweenR.stop(); }
-    if (this._walkBob)    { this._walkBob.stop(); }
-    this._legL.y = 0; this._legR.y = 0; this._bodyPart.y = 0;
-    this._player.scaleX = dirX < 0 ? -1 : 1;
-    this._walkTweenL = this.tweens.add({
-      targets: this._legL, y: -7,
-      duration: 210, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-    });
-    this._walkTweenR = this.tweens.add({
-      targets: this._legR, y: -7,
-      duration: 210, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: 210,
-    });
-    this._walkBob = this.tweens.add({
-      targets: this._bodyPart, y: -3,
-      duration: 210, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-    });
+    if (this._idleTween) { this._idleTween.stop(); this._idleTween = null; }
+    // Sprite chodzi w lewo — flip gdy idzie w prawo
+    this._astroSprite.setFlipX(dirX > 0);
+    this._astroSprite.play('walk');
   }
 
   // ── HUD ───────────────────────────────────────────────────────────────────
